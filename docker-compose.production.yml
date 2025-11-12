@@ -1,0 +1,52 @@
+# Docker Compose for ClientHunt Frontend - PRODUCTION
+# Port: 9100
+#
+# IMPORTANT: This file is for production deployment on VPS
+# - Uses host network mode (localhost works directly)
+# - No source code mounting (production build)
+# - Resource limits configured
+#
+# NETWORK MODE: host
+# - Container shares host's network stack
+# - localhost in container = host's localhost
+# - Simpler configuration
+# - No port mapping needed (uses host ports directly)
+
+services:
+  # ===== Frontend Service =====
+  lead-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clienthunt-frontend
+    network_mode: host  # Use host network - localhost works directly!
+    environment:
+      # Next.js environment variables
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=9100
+      - HOSTNAME=0.0.0.0
+      
+      # Frontend API Configuration (exposed to browser)
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.clienthunt.app}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-https://clienthunt.app}
+      
+      # Analytics & Monitoring
+      - NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID:-}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:9100', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+

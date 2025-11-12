@@ -1,0 +1,20 @@
+# robots.txt for ClientHunt
+# 
+# This file tells search engines which pages to crawl and index.
+
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /settings/
+
+# Allow important pages
+Allow: /pricing
+Allow: /login
+Allow: /register
+
+# Sitemap location
+Sitemap: https://clienthunt.app/sitemap.xml
+
