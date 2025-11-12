@@ -86,6 +86,11 @@ export function Footer() {
                   Changelog
                 </Link>
               </li>
+              <li>
+                <Link href="/docs" className="text-sm hover:text-white transition-colors">
+                  Documentation
+                </Link>
+              </li>
             </ul>
           </div>
 

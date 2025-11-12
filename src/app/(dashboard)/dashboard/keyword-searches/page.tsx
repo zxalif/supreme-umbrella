@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { Plus, Search } from 'lucide-react';
 import { KeywordSearchCard } from '@/components/dashboard/KeywordSearchCard';
 import { KeywordSearchForm } from '@/components/dashboard/KeywordSearchForm';
@@ -14,6 +14,8 @@ import {
 import type { KeywordSearch, KeywordSearchCreate } from '@/types/keyword-search';
 import { ApiClientError, extractErrorMessage } from '@/lib/api/client';
 import { showToast } from '@/components/ui/Toast';
+import { SuccessMessage } from '@/components/ui/SuccessMessage';
+import { HelpTooltip } from '@/components/ui/HelpTooltip';
 
 /**
  * Keyword Searches Page
@@ -22,20 +24,29 @@ import { showToast } from '@/components/ui/Toast';
  */
 export default function KeywordSearchesPage() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [searches, setSearches] = useState<KeywordSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSearch, setEditingSearch] = useState<KeywordSearch | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'paused'>('all');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  // Reset form state when navigating to this page (unless ?new=true is present)
   useEffect(() => {
-    loadSearches();
-    // Check if we should show the form (from query parameter or if no searches exist)
     const shouldShowForm = searchParams?.get('new') === 'true';
     if (shouldShowForm) {
       setShowForm(true);
+    } else {
+      // Reset form state when navigating to the page without ?new=true
+      setShowForm(false);
+      setEditingSearch(null);
     }
-  }, [searchParams]);
+  }, [pathname, searchParams]);
+
+  useEffect(() => {
+    loadSearches();
+  }, []);
 
   const loadSearches = async () => {
     setIsLoading(true);
@@ -59,6 +70,7 @@ export default function KeywordSearchesPage() {
       const newSearch = await createKeywordSearch(data);
       setSearches([...searches, newSearch]);
       setShowForm(false);
+      setShowSuccessMessage(true);
       showToast.success('Keyword search created successfully');
     } catch (err: any) {
       if (err instanceof ApiClientError) {
@@ -164,14 +176,34 @@ export default function KeywordSearchesPage() {
             Create and manage keyword searches to find freelance opportunities
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn-primary inline-flex items-center"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Create Search
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-primary inline-flex items-center"
+            data-tour="create-search-button"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Search
+          </button>
+          <HelpTooltip
+            content="Create a new keyword search to monitor Reddit for freelance opportunities. You'll be able to add keywords and select subreddits to monitor."
+            position="bottom"
+          />
+        </div>
       </div>
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <SuccessMessage
+          title="Keyword search created successfully!"
+          message="Great! Now go to Opportunities to generate leads from this search."
+          nextStep={{
+            label: 'Go to Opportunities',
+            href: '/dashboard/opportunities',
+          }}
+          onDismiss={() => setShowSuccessMessage(false)}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex items-center space-x-2">

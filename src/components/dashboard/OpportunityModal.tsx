@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Portal } from '@/components/ui/Portal';
+import { showToast } from '@/components/ui/Toast';
+import { Loader2 } from 'lucide-react';
 import { 
   X, 
   ExternalLink, 
@@ -48,6 +50,7 @@ export function OpportunityModal({ opportunity, isOpen, onClose, onUpdate }: Opp
   const [selectedStatus, setSelectedStatus] = useState<OpportunityStatus>(opportunity.status);
   const [copied, setCopied] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Sync notes and status when opportunity changes
   useEffect(() => {
@@ -84,9 +87,29 @@ export function OpportunityModal({ opportunity, isOpen, onClose, onUpdate }: Opp
 
   if (!isOpen) return null;
 
-  const handleStatusUpdate = () => {
-    onUpdate(opportunity.id, selectedStatus, notes);
-    onClose();
+  const handleStatusUpdate = async () => {
+    // Check if anything actually changed
+    const statusChanged = selectedStatus !== opportunity.status;
+    const notesChanged = notes !== (opportunity.notes || '');
+    
+    if (!statusChanged && !notesChanged) {
+      // Nothing changed, just close
+      onClose();
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await onUpdate(opportunity.id, selectedStatus, notes);
+      showToast.success('Opportunity updated successfully');
+      onClose();
+    } catch (error) {
+      console.error('Failed to update opportunity:', error);
+      showToast.error('Failed to update opportunity', 'Please try again');
+      // Don't close modal on error so user can retry
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -329,15 +352,18 @@ export function OpportunityModal({ opportunity, isOpen, onClose, onUpdate }: Opp
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              disabled={isUpdating}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={handleStatusUpdate}
-              className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
+              disabled={isUpdating}
+              className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Save Changes
+              {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isUpdating ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

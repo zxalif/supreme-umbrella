@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -17,8 +17,10 @@ import { useAuthStore } from '@/store/authStore';
  */
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, fetchUser, isLoading } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isLandingPage = pathname === '/';
 
   // Check authentication on mount
   useEffect(() => {
@@ -51,28 +53,34 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             <Link 
-              href="#features" 
+              href={isLandingPage ? "#features" : "/#features"} 
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
               Features
             </Link>
             <Link 
-              href="#how-it-works" 
+              href={isLandingPage ? "#how-it-works" : "/#how-it-works"} 
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
               How It Works
             </Link>
             <Link 
-              href="#pricing" 
+              href={isLandingPage ? "#pricing" : "/#pricing"} 
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
               Pricing
             </Link>
             <Link 
-              href="#faq" 
+              href={isLandingPage ? "#faq" : "/#faq"} 
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
               FAQ
+            </Link>
+            <Link 
+              href="/docs" 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all duration-200"
+            >
+              Docs
             </Link>
           </div>
 
@@ -124,32 +132,39 @@ export function Navbar() {
         <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-lg">
           <div className="px-4 py-4 space-y-1">
             <Link
-              href="#features"
+              href={isLandingPage ? "#features" : "/#features"}
               className="block px-4 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
-              href="#how-it-works"
+              href={isLandingPage ? "#how-it-works" : "/#how-it-works"}
               className="block px-4 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link
-              href="#pricing"
+              href={isLandingPage ? "#pricing" : "/#pricing"}
               className="block px-4 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link
-              href="#faq"
+              href={isLandingPage ? "#faq" : "/#faq"}
               className="block px-4 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               FAQ
+            </Link>
+            <Link
+              href="/docs"
+              className="block px-4 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Docs
             </Link>
             <div className="pt-4 space-y-2 border-t border-gray-200 mt-2">
               {isAuthenticated ? (

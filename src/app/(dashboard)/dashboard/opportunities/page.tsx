@@ -18,7 +18,12 @@ import {
   LayoutList
 } from 'lucide-react';
 import { ModernOpportunityCard } from '@/components/dashboard/ModernOpportunityCard';
+import { KeywordSearchSelector } from '@/components/dashboard/KeywordSearchSelector';
+import { CTABanner } from '@/components/dashboard/CTABanner';
+import { WorkflowProgress } from '@/components/dashboard/WorkflowProgress';
 import { showToast } from '@/components/ui/Toast';
+import { SuccessMessage } from '@/components/ui/SuccessMessage';
+import { QuickActionsCard } from '@/components/dashboard/QuickActionsCard';
 import {
   listOpportunities,
   updateOpportunity,
@@ -32,6 +37,7 @@ import type { Opportunity, OpportunityStatus, OpportunityFilters } from '@/types
 import type { KeywordSearch } from '@/types/keyword-search';
 import type { GenerateOpportunitiesJobStatus } from '@/types/opportunity';
 import { ApiClientError, extractErrorMessage } from '@/lib/api/client';
+import { getJobTimeInfo } from '@/lib/utils/timeEstimation';
 
 type ViewMode = 'card' | 'compact' | 'list';
 type SortBy = 'score' | 'relevance' | 'date' | 'urgency';
@@ -74,6 +80,8 @@ export default function OpportunitiesPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
   const [showFilters, setShowFilters] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [generatedCount, setGeneratedCount] = useState<number>(0);
 
   useEffect(() => {
     loadKeywordSearches();
@@ -82,6 +90,44 @@ export default function OpportunitiesPage() {
   useEffect(() => {
     loadOpportunities();
   }, [selectedKeywordSearch, selectedStatus, selectedSource, searchQuery, minScore, minRelevance, sortBy, sortOrder]);
+
+  // Check for active job on page load (from localStorage)
+  useEffect(() => {
+    const checkStoredJob = async () => {
+      if (typeof window === 'undefined') return;
+      
+      const storedJobId = localStorage.getItem('activeJobId');
+      const storedSearchId = localStorage.getItem('activeJobSearchId');
+      const storedStartTime = localStorage.getItem('activeJobStartTime');
+      
+      if (storedJobId && storedSearchId) {
+        // If we have a stored job, check if it's still active
+        try {
+          const status = await getGenerationJobStatus(storedJobId);
+          
+          if (status.status === 'pending' || status.status === 'processing') {
+            // Job is still active
+            setActiveJob(status);
+            setSelectedKeywordSearch(storedSearchId);
+            startPolling(storedJobId);
+          } else {
+            // Job completed or failed, clean up
+            localStorage.removeItem('activeJobId');
+            localStorage.removeItem('activeJobSearchId');
+            localStorage.removeItem('activeJobStartTime');
+          }
+        } catch (err) {
+          // Job might not exist anymore, clean up
+          console.warn('Stored job not found, cleaning up:', err);
+          localStorage.removeItem('activeJobId');
+          localStorage.removeItem('activeJobSearchId');
+          localStorage.removeItem('activeJobStartTime');
+        }
+      }
+    };
+    
+    checkStoredJob();
+  }, []);
 
   // Check for active job when keyword search changes
   useEffect(() => {
@@ -247,6 +293,12 @@ export default function OpportunitiesPage() {
         // If job completed or failed, stop polling and refresh opportunities
         if (status.status === 'completed' || status.status === 'failed') {
           stopPolling();
+          
+          // Clean up localStorage
+          localStorage.removeItem('activeJobId');
+          localStorage.removeItem('activeJobSearchId');
+          localStorage.removeItem('activeJobStartTime');
+          
           if (status.status === 'completed' && status.result) {
             // Refresh opportunities to show new ones
             await loadOpportunities();
@@ -329,6 +381,13 @@ export default function OpportunitiesPage() {
         forceRefresh
       );
       
+      // Store job ID in localStorage for persistence across reloads
+      if (result.job_id) {
+        localStorage.setItem('activeJobId', result.job_id);
+        localStorage.setItem('activeJobSearchId', selectedKeywordSearch);
+        localStorage.setItem('activeJobStartTime', Date.now().toString());
+      }
+      
       // Check for active job after starting (to show progress)
       await checkActiveJob();
       
@@ -337,6 +396,8 @@ export default function OpportunitiesPage() {
       
       // Show success message
       if (result.opportunities_created > 0) {
+        setGeneratedCount(result.opportunities_created);
+        setShowSuccessMessage(true);
         showToast.success(`Generated ${result.opportunities_created} new opportunities`);
         
         // Check for cooldown message in result
@@ -375,6 +436,11 @@ export default function OpportunitiesPage() {
         showToast.error('Generation failed', errorMessage);
       }
       setActiveJob(null);
+      
+      // Clean up localStorage on error
+      localStorage.removeItem('activeJobId');
+      localStorage.removeItem('activeJobSearchId');
+      localStorage.removeItem('activeJobStartTime');
     } finally {
       setIsGenerating(false);
     }
@@ -463,87 +529,95 @@ export default function OpportunitiesPage() {
           </p>
         </div>
         
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <button
-              onClick={handleExport}
-              className="btn-outline inline-flex items-center justify-center text-sm px-3 py-2"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </button>
-            
-            {selectedKeywordSearch !== 'all' && (
-              <>
-                {/* Force Refresh Toggle */}
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={forceRefresh}
-                    onChange={(e) => setForceRefresh(e.target.checked)}
-                    disabled={isGenerating || !!(activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing'))}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <span className={`text-xs ${forceRefresh ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
-                    Force Refresh
-                  </span>
-                </label>
-                
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !!(activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing'))}
-                  className="btn-primary inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm px-3 py-2"
-                  title={forceRefresh ? 'Force new scrape (respects cooldown period)' : 'Generate from existing leads or scrape if none exist'}
-                >
-                  {isGenerating || (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      <span className="hidden sm:inline">{activeJob ? 'Processing...' : 'Starting...'}</span>
-                      <span className="sm:hidden">{activeJob ? 'Processing' : 'Starting'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline">Generate Opportunities</span>
-                      <span className="sm:hidden">Generate</span>
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <button
+            onClick={handleExport}
+            className="btn-outline inline-flex items-center justify-center text-sm px-3 py-2"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </button>
         </div>
       </div>
 
       {/* Active Job Progress */}
-      {activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing') && (
-        <div className="card bg-blue-50 border-blue-200">
-          <div className="flex items-start">
-            <Loader2 className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5 animate-spin" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-blue-800 mb-1">
-                Generating Opportunities
-              </h3>
-              <p className="text-sm text-blue-600 mb-2">{activeJob.message}</p>
-              
-              {/* Check job message for cooldown info */}
-              {activeJob.message && activeJob.message.toLowerCase().includes('cooldown') && (
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
-                  ⏱️ {activeJob.message}
+      {activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing') && (() => {
+        const startTime = localStorage.getItem('activeJobStartTime');
+        const timeInfo = startTime ? getJobTimeInfo(startTime, activeJob.progress) : null;
+        
+        return (
+          <div className="card bg-blue-50 border-blue-200">
+            <div className="flex items-start">
+              <Loader2 className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5 animate-spin" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-semibold text-blue-800">
+                    Generating Opportunities
+                  </h3>
+                  {timeInfo && (
+                    <span className="text-xs text-blue-600">
+                      Started {timeInfo.elapsed.formatted}
+                    </span>
+                  )}
                 </div>
-              )}
-              
-              <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${activeJob.progress}%` }}
-                />
+                
+                <p className="text-sm text-blue-600 mb-1">
+                  {timeInfo ? timeInfo.stage : (activeJob.message || 'Processing...')}
+                </p>
+                
+                {/* Check job message for cooldown info */}
+                {activeJob.message && activeJob.message.toLowerCase().includes('cooldown') && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+                    ⏱️ {activeJob.message}
+                  </div>
+                )}
+                
+                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${activeJob.progress}%` }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-blue-500">{activeJob.progress}% complete</p>
+                  {timeInfo && (
+                    <p className="text-xs text-blue-500">
+                      Estimated: {timeInfo.remaining.formatted} remaining
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-blue-500 mt-1">{activeJob.progress}% complete</p>
             </div>
           </div>
-        </div>
+        );
+      })()}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <SuccessMessage
+          title={`${generatedCount} opportunities found!`}
+          message="Start reviewing them to find your next client."
+          nextStep={{
+            label: 'Review Opportunities',
+            href: '#',
+            onClick: () => {
+              setShowSuccessMessage(false);
+              // Scroll to opportunities list
+              window.scrollTo({ top: 600, behavior: 'smooth' });
+            },
+          }}
+          onDismiss={() => setShowSuccessMessage(false)}
+        />
       )}
+
+      {/* Quick Actions Card */}
+      <QuickActionsCard
+        hasSearches={keywordSearches.length > 0}
+        hasOpportunities={opportunities.length > 0}
+        selectedSearchId={selectedKeywordSearch !== 'all' ? selectedKeywordSearch : undefined}
+        onGenerateClick={handleGenerate}
+      />
 
       {/* Cooldown Message */}
       {cooldownMessage && (
@@ -624,6 +698,91 @@ export default function OpportunitiesPage() {
           </div>
         </div>
       </div>
+
+      {/* Workflow Progress Indicator */}
+      <WorkflowProgress
+        hasSearches={keywordSearches.length > 0}
+        hasOpportunities={opportunities.length > 0}
+        selectedSearchId={selectedKeywordSearch}
+      />
+
+      {/* Keyword Search Selector - Card-based */}
+      <div className="card p-4 md:p-6">
+        <KeywordSearchSelector
+          searches={keywordSearches}
+          selectedSearchId={selectedKeywordSearch}
+          onSelect={setSelectedKeywordSearch}
+        />
+        
+        {/* Generate Button Section - Below selector */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              {/* Force Refresh Toggle - Only show when search is selected */}
+              {selectedKeywordSearch !== 'all' && (
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={forceRefresh}
+                    onChange={(e) => setForceRefresh(e.target.checked)}
+                    disabled={isGenerating || !!(activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing'))}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <span className={`text-sm ${forceRefresh ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                    Force Refresh
+                  </span>
+                </label>
+              )}
+              
+              <button
+                onClick={handleGenerate}
+                disabled={
+                  selectedKeywordSearch === 'all' ||
+                  isGenerating ||
+                  !!(activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing'))
+                }
+                className="btn-primary inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2"
+                title={
+                  selectedKeywordSearch === 'all'
+                    ? 'Select a keyword search first'
+                    : forceRefresh
+                    ? 'Force new scrape (respects cooldown period)'
+                    : 'Generate from existing leads or scrape if none exist'
+                }
+                data-tour="generate-opportunities"
+              >
+                {isGenerating || (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="hidden sm:inline">{activeJob ? 'Processing...' : 'Starting...'}</span>
+                    <span className="sm:hidden">{activeJob ? 'Processing' : 'Starting'}</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Generate Opportunities</span>
+                    <span className="sm:hidden">Generate</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {selectedKeywordSearch === 'all' && (
+              <p className="text-xs text-gray-500 italic">
+                Select a keyword search above to generate opportunities
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Banner */}
+      <CTABanner
+        hasSearches={keywordSearches.length > 0}
+        hasOpportunities={opportunities.length > 0}
+        selectedSearchId={selectedKeywordSearch}
+        onGenerate={handleGenerate}
+      />
 
       {/* Search and View Controls */}
       <div className="card p-3 sm:p-4 md:p-6">
@@ -719,24 +878,7 @@ export default function OpportunitiesPage() {
           </div>
 
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Keyword Search Filter */}
-              <div>
-                <label className="form-label">Keyword Search</label>
-                <select
-                  value={selectedKeywordSearch}
-                  onChange={(e) => setSelectedKeywordSearch(e.target.value)}
-                  className="input"
-                >
-                  <option value="all">All Searches</option>
-                  {keywordSearches.map((search) => (
-                    <option key={search.id} value={search.id}>
-                      {search.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Status Filter */}
               <div>
                 <label className="form-label">Status</label>
@@ -851,23 +993,68 @@ export default function OpportunitiesPage() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No opportunities found
-          </h3>
-          <p className="text-gray-600 mb-6">
-            {hasActiveFilters
-              ? 'Try adjusting your filters or generate opportunities from a keyword search'
-              : 'Create a keyword search and generate opportunities to get started'}
-          </p>
-          {selectedKeywordSearch !== 'all' && (
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="btn-primary inline-flex items-center"
-            >
-              <RefreshCw className="w-5 h-5 mr-2" />
-              Generate Opportunities
-            </button>
+          
+          {keywordSearches.length === 0 ? (
+            <>
+              {/* No keyword searches exist */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Keyword Searches Yet
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Create a keyword search first, then generate opportunities. The workflow is simple: <strong>Create a search → Generate opportunities</strong>
+              </p>
+              <a
+                href="/dashboard/keyword-searches"
+                className="btn-primary inline-flex items-center"
+              >
+                <SearchIcon className="w-5 h-5 mr-2" />
+                Create Keyword Search
+              </a>
+            </>
+          ) : selectedKeywordSearch === 'all' ? (
+            <>
+              {/* Searches exist but none selected */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Select a Keyword Search
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                You have {keywordSearches.length} keyword search{keywordSearches.length !== 1 ? 'es' : ''} set up! Select one from above to generate opportunities.
+              </p>
+              <p className="text-sm text-gray-500">
+                👆 Look for the keyword search cards above
+              </p>
+            </>
+          ) : (
+            <>
+              {/* Search selected but no opportunities */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Opportunities Yet
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {hasActiveFilters
+                  ? 'No opportunities match your current filters. Try adjusting your filters or generate new opportunities.'
+                  : `Ready to generate opportunities from "${keywordSearches.find(s => s.id === selectedKeywordSearch)?.name || 'selected search'}"? Click the button below to start!`}
+              </p>
+              {!hasActiveFilters && (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !!(activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing'))}
+                  className="btn-primary inline-flex items-center"
+                >
+                  {isGenerating || (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2" />
+                      Generate Opportunities
+                    </>
+                  )}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

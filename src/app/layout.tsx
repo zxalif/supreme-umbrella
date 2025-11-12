@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: '%s | ClientHunt'
   },
   
-  description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation tool that monitors Reddit 24/7 for relevant client posts. Get instant notifications for opportunities matching your skills. Free 1-month trial, no credit card required.',
+  description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial, no credit card.',
   
   keywords: [
     'Reddit lead generation',
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'ClientHunt',
     title: 'ClientHunt - Find Freelance Opportunities on Reddit',
-    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation tool that monitors Reddit 24/7 for relevant client posts. Get instant notifications for opportunities matching your skills.',
+    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial.',
     images: [
       {
         url: '/og-image.jpg', // Create this image (1200x630px)
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'ClientHunt - Find Freelance Opportunities on Reddit',
-    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation tool that monitors Reddit 24/7 for relevant client posts.',
+    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free trial.',
     images: ['/twitter-image.jpg'], // Create this image (1200x675px)
     creator: '@clienthunt',
   },

@@ -194,7 +194,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-full overflow-x-hidden">
       {/* Header with Refresh */}
-      <div className="space-y-4">
+      <div className="space-y-4" data-tour="dashboard-header">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, Trash2, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { extractErrorMessage, extractFieldErrors } from '@/lib/utils/error-handler';
+import { KeywordAutoComplete } from '@/components/forms/KeywordAutoComplete';
+import { SubredditAutoComplete } from '@/components/forms/SubredditAutoComplete';
 import type { KeywordSearch, KeywordSearchCreate } from '@/types/keyword-search';
 
 interface KeywordSearchFormProps {
@@ -30,18 +32,15 @@ export function KeywordSearchForm({
     enabled: search?.enabled ?? true,
   });
 
-  const [newKeyword, setNewKeyword] = useState('');
-  const [newSubreddit, setNewSubreddit] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const addKeyword = () => {
-    if (newKeyword.trim() && !formData.keywords.includes(newKeyword.trim())) {
+  const addKeyword = (keyword: string) => {
+    if (keyword.trim() && !formData.keywords.includes(keyword.trim())) {
       setFormData({
         ...formData,
-        keywords: [...formData.keywords, newKeyword.trim()],
+        keywords: [...formData.keywords, keyword.trim()],
       });
-      setNewKeyword('');
     }
   };
 
@@ -52,13 +51,13 @@ export function KeywordSearchForm({
     });
   };
 
-  const addSubreddit = () => {
-    if (newSubreddit.trim() && !formData.subreddits?.includes(newSubreddit.trim())) {
+  const addSubreddit = (subreddit: string) => {
+    const cleanSubreddit = subreddit.replace(/^r\//, '').trim();
+    if (cleanSubreddit && !formData.subreddits?.includes(cleanSubreddit)) {
       setFormData({
         ...formData,
-        subreddits: [...(formData.subreddits || []), newSubreddit.trim()],
+        subreddits: [...(formData.subreddits || []), cleanSubreddit],
       });
-      setNewSubreddit('');
     }
   };
 
@@ -99,7 +98,7 @@ export function KeywordSearchForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" data-tour="keyword-search-form">
       {errors.general && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{errors.general}</p>
@@ -134,51 +133,18 @@ export function KeywordSearchForm({
             <Info className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-blue-800">
               <p className="font-semibold mb-1">What skills or services are you looking for?</p>
-              <p className="mb-1">Examples: "react developer", "python", "web designer", "graphic designer", "copywriter"</p>
+              <p className="mb-1">Start typing to see suggestions, or browse popular keywords below.</p>
               <p>We'll search for posts containing these keywords on Reddit.</p>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2 mb-2">
-          <input
-            type="text"
-            value={newKeyword}
-            onChange={(e) => setNewKeyword(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addKeyword();
-              }
-            }}
-            className="input flex-1"
-            placeholder="e.g., react developer, python, web designer"
-          />
-          <button
-            type="button"
-            onClick={addKeyword}
-            className="btn-outline"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {formData.keywords.map((keyword, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-md text-sm"
-            >
-              <span>{keyword}</span>
-              <button
-                type="button"
-                onClick={() => removeKeyword(keyword)}
-                className="hover:text-blue-900"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-        {errors.keywords && <p className="form-error">{errors.keywords}</p>}
+        <KeywordAutoComplete
+          selectedKeywords={formData.keywords}
+          onAddKeyword={addKeyword}
+          onRemoveKeyword={removeKeyword}
+          placeholder="Type to search keywords (e.g., react developer, python, web designer)"
+          error={errors.keywords}
+        />
       </div>
 
       {/* Subreddits */}
@@ -189,50 +155,18 @@ export function KeywordSearchForm({
             <Info className="w-4 h-4 text-purple-600 mr-2 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-purple-800">
               <p className="font-semibold mb-1">Which Reddit communities to search?</p>
-              <p className="mb-1">Examples: "forhire", "hiring", "freelance", "workonline", "slavelabour"</p>
-              <p>Leave empty to search all subreddits. Enter without "r/" prefix.</p>
+              <p className="mb-1">Start typing to see suggestions, or browse popular subreddits below.</p>
+              <p>Leave empty to search all subreddits. We'll suggest relevant subreddits based on your keywords.</p>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2 mb-2">
-          <input
-            type="text"
-            value={newSubreddit}
-            onChange={(e) => setNewSubreddit(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addSubreddit();
-              }
-            }}
-            className="input flex-1"
-            placeholder="e.g., forhire, hiring, freelance (without r/)"
-          />
-          <button
-            type="button"
-            onClick={addSubreddit}
-            className="btn-outline"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {formData.subreddits?.map((subreddit, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-50 text-purple-700 rounded-md text-sm"
-            >
-              <span>r/{subreddit}</span>
-              <button
-                type="button"
-                onClick={() => removeSubreddit(subreddit)}
-                className="hover:text-purple-900"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
+        <SubredditAutoComplete
+          selectedSubreddits={formData.subreddits || []}
+          onAddSubreddit={addSubreddit}
+          onRemoveSubreddit={removeSubreddit}
+          relatedKeywords={formData.keywords}
+          placeholder="Type to search subreddits (e.g., forhire, hiring, freelance)"
+        />
       </div>
 
       {/* Enabled */}

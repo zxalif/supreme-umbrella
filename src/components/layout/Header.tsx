@@ -7,6 +7,9 @@ import { useAuthStore } from '@/store/authStore';
 import { Bell, Search, Settings, LogOut, User, Menu, X } from 'lucide-react';
 import type { User as UserType } from '@/types/user';
 import { getUnreadNotificationCount } from '@/lib/api/support';
+import { HelpButton } from '@/components/help/HelpButton';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { SearchResults } from '@/components/search/SearchResults';
 
 interface HeaderProps {
   user: UserType;
@@ -31,7 +34,21 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Global search hook
+  const {
+    query,
+    results,
+    isLoading,
+    isOpen: isSearchOpen,
+    setQuery,
+    clearSearch,
+    closeDropdown,
+    setIsOpen: setSearchOpen,
+  } = useGlobalSearch();
 
   const handleLogout = () => {
     setShowUserMenu(false);
@@ -55,10 +72,49 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
   // Focus search input when mobile search opens
   useEffect(() => {
-    if (showMobileSearch && searchInputRef.current) {
-      searchInputRef.current.focus();
+    if (showMobileSearch && mobileSearchInputRef.current) {
+      mobileSearchInputRef.current.focus();
     }
   }, [showMobileSearch]);
+
+  // Keyboard shortcut: Cmd/Ctrl + K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        // Focus desktop search if visible, otherwise mobile
+        const searchInput = desktopSearchInputRef.current || mobileSearchInputRef.current;
+        if (searchInput) {
+          searchInput.focus();
+          setSearchOpen(true);
+          // Open mobile search if using mobile input
+          if (mobileSearchInputRef.current && !showMobileSearch) {
+            setShowMobileSearch(true);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [setSearchOpen, showMobileSearch]);
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        closeDropdown();
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isSearchOpen, closeDropdown]);
 
   // Load unread notification count
   useEffect(() => {
@@ -89,6 +145,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
               onClick={onMobileMenuToggle}
               className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
               aria-label="Toggle menu"
+              data-tour="mobile-menu-button"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
             </button>
@@ -108,18 +165,44 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
           {/* Center: Search */}
           <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+            <div ref={searchContainerRef} className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none z-10" />
               <input
+                ref={desktopSearchInputRef}
                 type="text"
-                placeholder="Search opportunities..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => query.length >= 2 && setSearchOpen(true)}
+                placeholder="Search opportunities... (⌘K)"
                 className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <SearchResults
+                results={results}
+                query={query}
+                isLoading={isLoading}
+                isOpen={isSearchOpen}
+                onClose={closeDropdown}
+                onNavigate={closeDropdown}
               />
             </div>
           </div>
 
           {/* Right: Actions & User Menu */}
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            {/* Help Button */}
+            <div className="hidden sm:block">
+              <HelpButton variant="header" />
+            </div>
+
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setShowMobileSearch(!showMobileSearch)}
@@ -220,21 +303,47 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
         {/* Mobile Search Bar */}
         {showMobileSearch && (
           <div className="md:hidden pb-3 animate-in slide-in-from-top duration-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div ref={searchContainerRef} className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
               <input
-                ref={searchInputRef}
+                ref={mobileSearchInputRef}
                 type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => query.length >= 2 && setSearchOpen(true)}
                 placeholder="Search opportunities..."
                 className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {query ? (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4 text-gray-400" />
+                </button>
+              ) : null}
               <button
-                onClick={() => setShowMobileSearch(false)}
+                onClick={() => {
+                  setShowMobileSearch(false);
+                  clearSearch();
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
                 aria-label="Close search"
               >
                 <X className="w-4 h-4 text-gray-400" />
               </button>
+              <SearchResults
+                results={results}
+                query={query}
+                isLoading={isLoading}
+                isOpen={isSearchOpen}
+                onClose={closeDropdown}
+                onNavigate={() => {
+                  closeDropdown();
+                  setShowMobileSearch(false);
+                }}
+              />
             </div>
           </div>
         )}

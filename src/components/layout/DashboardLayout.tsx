@@ -7,6 +7,8 @@ import { getAuthToken } from '@/lib/api/client';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { QuickSupport } from '@/components/dashboard/QuickSupport';
+import { TourProvider } from '@/components/tour/TourProvider';
+import { HelpButton } from '@/components/help/HelpButton';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -114,34 +116,41 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header 
-        user={user} 
-        onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      />
-
-      <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <Sidebar 
-          currentPath={pathname}
-          isMobileOpen={isMobileMenuOpen}
-          onMobileClose={() => setIsMobileMenuOpen(false)}
+    <TourProvider autoStart={true}>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <Header 
+          user={user} 
+          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         />
 
-        {/* Main Content */}
-        <main className="flex-1 w-full min-w-0 overflow-hidden lg:ml-64">
-          <div className="h-full overflow-y-auto">
-            <div className="p-3 sm:p-4 md:p-6 lg:p-8 w-full max-w-none">
-              {children}
-            </div>
-          </div>
-        </main>
-      </div>
+        <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+          {/* Sidebar */}
+          <Sidebar 
+            currentPath={pathname}
+            isMobileOpen={isMobileMenuOpen}
+            onMobileClose={() => setIsMobileMenuOpen(false)}
+          />
 
-      {/* Quick Support Widget */}
-      <QuickSupport />
-    </div>
+          {/* Main Content */}
+          <main className="flex-1 w-full min-w-0 overflow-hidden lg:ml-64">
+            <div className="h-full overflow-y-auto">
+              <div className="p-3 sm:p-4 md:p-6 lg:p-8 w-full max-w-none">
+                {children}
+              </div>
+            </div>
+          </main>
+        </div>
+
+        {/* Quick Support Widget */}
+        <QuickSupport />
+        
+        {/* Floating Help Button (Mobile only) */}
+        <div className="sm:hidden">
+          <HelpButton variant="floating" />
+        </div>
+      </div>
+    </TourProvider>
   );
 }
 
