@@ -26,6 +26,9 @@ export interface RegisterRequest {
   email: string;
   full_name: string;
   password: string;
+  consent_data_processing: boolean;
+  consent_marketing: boolean;
+  consent_cookies: boolean;
 }
 
 export interface RegisterResponse {

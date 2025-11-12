@@ -7,7 +7,6 @@ import type { Opportunity } from '@/types/opportunity';
 // Mock opportunity data for testing
 const mockOpportunity: Opportunity = {
   id: 'test-1',
-  user_id: 'user-1',
   keyword_search_id: 'search-1',
   source_post_id: 'post-1',
   source: 'reddit',

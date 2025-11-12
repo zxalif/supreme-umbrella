@@ -6,6 +6,22 @@ import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ShareButtons } from './ShareButtons';
 
+// SECURITY: Use DOMPurify to sanitize HTML and prevent XSS
+// Lazy load DOMPurify to avoid build-time issues with jsdom
+async function getDOMPurify() {
+  if (typeof window !== 'undefined') {
+    // Client-side: use regular DOMPurify
+    const DOMPurify = (await import('dompurify')).default;
+    return DOMPurify;
+  } else {
+    // Server-side: use isomorphic-dompurify with dynamic import
+    const createDOMPurify = (await import('isomorphic-dompurify')).default;
+    const { JSDOM } = await import('jsdom');
+    const window = new JSDOM('').window;
+    return createDOMPurify(window);
+  }
+}
+
 // Static blog posts content
 // Later, you can move this to markdown files or a JSON file
 const blogPosts: Record<string, {
@@ -289,6 +305,7 @@ function markdownToHtml(markdown: string): string {
 
 /**
  * Process inline markdown (bold, italic, links)
+ * SECURITY: Link URLs are validated to prevent javascript: and data: URLs
  */
 function processInlineMarkdown(text: string): string {
   // Convert bold (**text**)
@@ -297,10 +314,56 @@ function processInlineMarkdown(text: string): string {
   // Convert italic (*text*) - but not if it's part of bold
   text = text.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
 
-  // Convert links [text](url)
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Convert links [text](url) - SECURITY: Validate URL to prevent XSS
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+    // Sanitize URL - only allow http, https, mailto, and relative URLs
+    const sanitizedUrl = sanitizeUrl(url);
+    if (!sanitizedUrl) {
+      // If URL is invalid, return just the text without link
+      return linkText;
+    }
+    return `<a href="${sanitizedUrl}" class="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+  });
 
   return text;
+}
+
+/**
+ * Sanitize URL to prevent XSS attacks
+ * Only allows http, https, mailto, and relative URLs
+ */
+function sanitizeUrl(url: string): string | null {
+  if (!url || typeof url !== 'string') {
+    return null;
+  }
+  
+  const trimmed = url.trim().toLowerCase();
+  
+  // Block dangerous protocols
+  if (trimmed.startsWith('javascript:') || 
+      trimmed.startsWith('data:') || 
+      trimmed.startsWith('vbscript:') ||
+      trimmed.startsWith('file:') ||
+      trimmed.startsWith('on')) {
+    return null;
+  }
+  
+  // Allow http, https, mailto, and relative URLs
+  if (trimmed.startsWith('http://') || 
+      trimmed.startsWith('https://') || 
+      trimmed.startsWith('mailto:') ||
+      trimmed.startsWith('/') ||
+      trimmed.startsWith('#')) {
+    return url.trim(); // Return original (not lowercased) for display
+  }
+  
+  // Allow relative URLs (no protocol)
+  if (!trimmed.includes(':')) {
+    return url.trim();
+  }
+  
+  // Block everything else
+  return null;
 }
 
 type Props = {
@@ -330,6 +393,14 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post) {
     notFound();
   }
+
+  // Get DOMPurify instance (lazy loaded)
+  const DOMPurify = await getDOMPurify();
+  const sanitizedContent = DOMPurify.sanitize(markdownToHtml(post.content), {
+    ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+    ALLOW_DATA_ATTR: false,
+  });
 
   return (
     <>
@@ -370,7 +441,9 @@ export default async function BlogPostPage({ params }: Props) {
             {/* Article Content */}
             <div 
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700"
-              dangerouslySetInnerHTML={{ __html: markdownToHtml(post.content) }}
+              dangerouslySetInnerHTML={{ 
+                __html: sanitizedContent
+              }}
             />
 
             {/* Share Section */}

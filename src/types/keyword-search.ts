@@ -6,7 +6,6 @@
 
 export interface KeywordSearch {
   id: string;
-  user_id: string;
   name: string;
   keywords: string[];
   patterns: string[];
@@ -15,6 +14,7 @@ export interface KeywordSearch {
   enabled: boolean;
   created_at: string;
   updated_at: string;
+  // Removed: user_id, last_run_at, zola_search_id, deleted_at (not needed/not exposed)
 }
 
 export interface KeywordSearchCreate {

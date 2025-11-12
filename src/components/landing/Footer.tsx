@@ -145,17 +145,27 @@ export function Footer() {
                   Security
                 </Link>
               </li>
+              <li>
+                <Link href="/privacy#do-not-sell" className="text-sm hover:text-white transition-colors">
+                  Do Not Sell My Data
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-gray-400">
+                © {currentYear} ClientHunt. All rights reserved.
+              </p>
+              <p className="text-xs text-gray-500">
+                Reddit is a trademark of Reddit Inc. ClientHunt is not affiliated with, endorsed by, or sponsored by Reddit Inc.
+              </p>
+            </div>
             <p className="text-sm text-gray-400">
-              © {currentYear} ClientHunt. All rights reserved.
-            </p>
-            <p className="text-sm text-gray-400 mt-4 md:mt-0">
               Made with ❤️ for freelancers worldwide
             </p>
           </div>

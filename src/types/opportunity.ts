@@ -21,7 +21,6 @@ export interface ExtractedInfo {
 
 export interface Opportunity {
   id: string;
-  user_id: string;
   keyword_search_id: string;
   source_post_id: string;
   source: string;
@@ -42,6 +41,7 @@ export interface Opportunity {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  // Removed: user_id (not needed, user already authenticated via JWT)
 }
 
 export type OpportunityStatus = 

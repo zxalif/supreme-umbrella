@@ -17,7 +17,14 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, full_name: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    full_name: string,
+    password: string,
+    consent_data_processing: boolean,
+    consent_marketing: boolean,
+    consent_cookies: boolean
+  ) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   clearError: () => void;
@@ -46,10 +53,24 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
       },
 
-      register: async (email: string, full_name: string, password: string) => {
+      register: async (
+        email: string,
+        full_name: string,
+        password: string,
+        consent_data_processing: boolean,
+        consent_marketing: boolean,
+        consent_cookies: boolean
+      ) => {
         set({ isLoading: true, error: null });
         try {
-          await apiRegister({ email, full_name, password });
+          await apiRegister({
+            email,
+            full_name,
+            password,
+            consent_data_processing,
+            consent_marketing,
+            consent_cookies,
+          });
           // Track signup
           track.signup('email');
           // Auto-login after registration

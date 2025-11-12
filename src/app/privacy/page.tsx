@@ -54,16 +54,28 @@ export default function PrivacyPolicyPage() {
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">2.3 Reddit Data</h3>
                 <p className="text-gray-700 mb-4">
-                  We collect publicly available data from Reddit based on your keyword searches:
+                  We collect and store publicly available data from Reddit based on your keyword searches:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
                   <li>Post titles, content, and metadata</li>
-                  <li>Author usernames (publicly available)</li>
+                  <li>Author usernames (publicly available Reddit handles)</li>
+                  <li>Post URLs and permalinks</li>
                   <li>Subreddit information</li>
                   <li>Post timestamps and engagement metrics</li>
                 </ul>
-                <p className="text-gray-700">
+                <p className="text-gray-700 mb-4">
                   <strong>Important:</strong> We only collect publicly available data from Reddit. We do not access private messages, private subreddits, or any data that requires authentication beyond what is publicly accessible.
+                </p>
+                <p className="text-gray-700 mb-4">
+                  <strong>Data Storage:</strong> This Reddit data is stored in our database to:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Provide you with historical access to opportunities</li>
+                  <li>Enable deduplication of leads</li>
+                  <li>Improve our matching algorithms</li>
+                </ul>
+                <p className="text-gray-700">
+                  <strong>Data Retention:</strong> Reddit data is retained for 90 days after your account is deleted, or until you request deletion, whichever comes first. This allows us to maintain data integrity and comply with legal obligations.
                 </p>
               </section>
 
@@ -97,7 +109,17 @@ export default function PrivacyPolicyPage() {
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">4.3 Data Retention</h3>
                 <p className="text-gray-700 mb-4">
-                  We retain your personal information for as long as your account is active or as needed to provide our services. You can request deletion of your account and data at any time by contacting us at <a href="mailto:support@clienthunt.app" className="text-blue-600 hover:underline">support@clienthunt.app</a>.
+                  We retain your personal information according to the following schedule:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li><strong>Active Accounts:</strong> Data is retained for as long as your account is active</li>
+                  <li><strong>Deleted Accounts:</strong> Personal data is deleted within 30 days of account deletion request</li>
+                  <li><strong>Reddit Data:</strong> Retained for 90 days after account deletion (for data integrity and legal compliance)</li>
+                  <li><strong>Transaction Records:</strong> Retained for 7 years (for tax and accounting purposes, as required by law)</li>
+                  <li><strong>Security Logs:</strong> Retained for 90 days (IP addresses, access logs)</li>
+                </ul>
+                <p className="text-gray-700">
+                  You can request deletion of your account and data at any time by contacting us at <a href="mailto:privacy@clienthunt.app" className="text-blue-600 hover:underline">privacy@clienthunt.app</a>.
                 </p>
               </section>
 
@@ -107,6 +129,9 @@ export default function PrivacyPolicyPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">5.1 We Do Not Sell Your Data</h3>
                 <p className="text-gray-700 mb-4">
                   <strong>We do not sell, rent, or trade your personal information to third parties.</strong> Your data is used solely to provide and improve our service.
+                </p>
+                <p className="text-gray-700 mb-4">
+                  <strong>CCPA "Do Not Sell My Data":</strong> California residents can opt out of the sale of personal information (though we do not sell data). To exercise this right, please contact us at <a href="mailto:privacy@clienthunt.app" className="text-blue-600 hover:underline">privacy@clienthunt.app</a> or use the "Do Not Sell My Data" link in our footer.
                 </p>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">5.2 Service Providers</h3>
@@ -175,6 +200,36 @@ export default function PrivacyPolicyPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">7.4 Data Subject Requests</h3>
                 <p className="text-gray-700 mb-4">
                   To exercise your rights, please contact us at <a href="mailto:privacy@clienthunt.app" className="text-blue-600 hover:underline">privacy@clienthunt.app</a>. We will respond to your request within 30 days.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">7.5 Right to be Forgotten (GDPR Article 17)</h3>
+                <p className="text-gray-700 mb-4">
+                  You have the right to request deletion of your personal data. To exercise this right:
+                </p>
+                <ol className="list-decimal pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Email <a href="mailto:privacy@clienthunt.app" className="text-blue-600 hover:underline">privacy@clienthunt.app</a> with subject "Data Deletion Request"</li>
+                  <li>Include your account email address</li>
+                  <li>We will respond within 30 days</li>
+                </ol>
+                <p className="text-gray-700 mb-4">
+                  <strong>What will be deleted:</strong>
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Your account information (email, name, password hash)</li>
+                  <li>Your keyword searches and preferences</li>
+                  <li>Your saved opportunities and notes</li>
+                  <li>Your usage analytics</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  <strong>What may be retained (for legal compliance):</strong>
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Transaction records (for tax/accounting purposes) - 7 years</li>
+                  <li>Reddit data that was publicly available (may be anonymized) - 90 days</li>
+                  <li>Logs containing your IP address (for security) - 90 days</li>
+                </ul>
+                <p className="text-gray-700">
+                  After deletion, you will receive confirmation and your account will be permanently removed. Note: Account deletion is performed as a "soft delete" initially (account deactivated), with full data deletion completed within 30 days.
                 </p>
               </section>
 

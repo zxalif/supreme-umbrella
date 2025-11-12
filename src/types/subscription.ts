@@ -9,15 +9,14 @@ export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'past_due'
 
 export interface Subscription {
   id: string;
-  user_id: string;
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
-  paddle_subscription_id: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
+  // Removed: user_id, paddle_subscription_id (not needed/not exposed)
 }
 
 export interface SubscriptionLimits {

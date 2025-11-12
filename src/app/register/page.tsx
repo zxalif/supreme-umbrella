@@ -23,6 +23,9 @@ export default function RegisterPage() {
     full_name: '',
     password: '',
     confirmPassword: '',
+    consentDataProcessing: false,
+    consentMarketing: false,
+    consentCookies: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -98,6 +101,14 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Consent validation (required for GDPR/CCPA compliance)
+    if (!formData.consentDataProcessing) {
+      newErrors.consentDataProcessing = 'You must agree to data processing to create an account';
+    }
+    if (!formData.consentCookies) {
+      newErrors.consentCookies = 'You must accept cookie usage to use our service';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -118,6 +129,9 @@ export default function RegisterPage() {
         email: formData.email,
         full_name: formData.full_name,
         password: formData.password,
+        consent_data_processing: formData.consentDataProcessing,
+        consent_marketing: formData.consentMarketing,
+        consent_cookies: formData.consentCookies,
       });
       
       // Track successful registration (signup tracking is done in authStore)
@@ -347,6 +361,85 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Consent Checkboxes */}
+            <div className="space-y-4 pt-2">
+              {/* Required: Data Processing Consent */}
+              <div>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="consentDataProcessing"
+                    checked={formData.consentDataProcessing}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, consentDataProcessing: e.target.checked }));
+                      if (errors.consentDataProcessing) {
+                        setErrors((prev) => ({ ...prev, consentDataProcessing: '' }));
+                      }
+                    }}
+                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    required
+                  />
+                  <span className="text-sm text-gray-700">
+                    I consent to the collection and processing of my personal data as described in the{' '}
+                    <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">
+                      Privacy Policy
+                    </Link>
+                    {' '}*
+                  </span>
+                </label>
+                {errors.consentDataProcessing && (
+                  <p className="form-error mt-1">{errors.consentDataProcessing}</p>
+                )}
+              </div>
+
+              {/* Required: Cookie Consent */}
+              <div>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="consentCookies"
+                    checked={formData.consentCookies}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, consentCookies: e.target.checked }));
+                      if (errors.consentCookies) {
+                        setErrors((prev) => ({ ...prev, consentCookies: '' }));
+                      }
+                    }}
+                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    required
+                  />
+                  <span className="text-sm text-gray-700">
+                    I accept the use of cookies and tracking technologies as described in the{' '}
+                    <Link href="/cookies" className="text-blue-600 hover:underline" target="_blank">
+                      Cookie Policy
+                    </Link>
+                    {' '}*
+                  </span>
+                </label>
+                {errors.consentCookies && (
+                  <p className="form-error mt-1">{errors.consentCookies}</p>
+                )}
+              </div>
+
+              {/* Optional: Marketing Email Consent */}
+              <div>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="consentMarketing"
+                    checked={formData.consentMarketing}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, consentMarketing: e.target.checked }));
+                    }}
+                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    I would like to receive marketing emails about new features, tips, and special offers (optional)
+                  </span>
+                </label>
+              </div>
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -376,14 +469,15 @@ export default function RegisterPage() {
               </Link>
             </p>
             <p className="text-xs text-gray-500">
-              By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-blue-600 hover:underline">
+              By creating an account, you also agree to our{' '}
+              <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">
                 Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-blue-600 hover:underline">
-                Privacy Policy
               </Link>
+              . You can withdraw your consent at any time by contacting{' '}
+              <a href="mailto:privacy@clienthunt.app" className="text-blue-600 hover:underline">
+                privacy@clienthunt.app
+              </a>
+              .
             </p>
           </div>
         </div>

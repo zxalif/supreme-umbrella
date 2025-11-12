@@ -11,13 +11,17 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@types/dompurify": "^3.2.0",
     "@types/intro.js": "^5.1.5",
     "axios": "^1.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "dompurify": "^3.3.0",
     "framer-motion": "^12.23.24",
     "intro.js": "^8.3.2",
+    "isomorphic-dompurify": "^2.31.0",
+    "jsdom": "^27.2.0",
     "lucide-react": "^0.445.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
@@ -31,6 +35,7 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

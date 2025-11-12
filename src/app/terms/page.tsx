@@ -104,6 +104,30 @@ export default function TermsOfServicePage() {
                 <p className="text-gray-700 mb-4">
                   If payment fails, we may suspend or terminate your account. You remain responsible for all charges incurred before termination.
                 </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.6 Chargebacks and Fraud</h3>
+                <p className="text-gray-700 mb-4">
+                  If you dispute a charge (chargeback) with your payment provider:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Your account will be immediately suspended pending resolution</li>
+                  <li>We reserve the right to permanently ban accounts with fraudulent chargebacks</li>
+                  <li>Chargeback fees may be passed on to you</li>
+                  <li>We will provide transaction records to payment processor upon request</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  <strong>Fraud Prevention:</strong> We monitor for suspicious activity and may suspend accounts without notice. Sharing accounts or using stolen payment methods is prohibited. Violations may result in legal action.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.7 Taxes</h3>
+                <p className="text-gray-700 mb-4">
+                  Prices are exclusive of applicable taxes. You are responsible for:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>VAT/GST in your jurisdiction (if applicable)</li>
+                  <li>Any import duties or taxes</li>
+                  <li>Income tax on revenue generated from ClientHunt leads</li>
+                </ul>
               </section>
 
               <section className="mb-8">
@@ -189,6 +213,24 @@ export default function TermsOfServicePage() {
                 <p className="text-gray-700 mb-4">
                   <strong>We do not guarantee that using ClientHunt will result in finding clients, securing projects, or generating income.</strong> The Service is a tool to help you discover opportunities; success depends on many factors beyond our control.
                 </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">9.3 Third-Party Data Disclaimer</h3>
+                <p className="text-gray-700 mb-4">
+                  ClientHunt aggregates data from Reddit, a third-party platform. We do not control, verify, or guarantee the accuracy, completeness, or timeliness of Reddit content. Reddit posts may be deleted, edited, or removed by Reddit or users at any time. We are not responsible for changes to Reddit content after it is collected.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">9.4 AI and Automation</h3>
+                <p className="text-gray-700 mb-4">
+                  ClientHunt uses artificial intelligence and machine learning to analyze and classify Reddit content. AI systems are not perfect and may:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Misclassify opportunities</li>
+                  <li>Miss relevant posts</li>
+                  <li>Generate inaccurate scores or insights</li>
+                </ul>
+                <p className="text-gray-700">
+                  We do not guarantee the accuracy of AI-generated classifications. Users should review all opportunities and use their own judgment. We are not liable for decisions made based on AI-generated content.
+                </p>
               </section>
 
               <section className="mb-8">
@@ -231,17 +273,66 @@ export default function TermsOfServicePage() {
                 <p className="text-gray-700 mb-4">
                   Upon termination, your access to the Service will cease. We may delete your account and data in accordance with our Privacy Policy. You remain responsible for all charges incurred before termination.
                 </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">11.4 Appeal Process</h3>
+                <p className="text-gray-700 mb-4">
+                  If your account is suspended or terminated, you may appeal by:
+                </p>
+                <ol className="list-decimal pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Emailing support@clienthunt.app within 30 days</li>
+                  <li>Providing explanation and evidence</li>
+                  <li>We will review within 14 business days</li>
+                  <li>Our decision is final</li>
+                </ol>
               </section>
 
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Third-Party Services</h2>
+                
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">12.1 Reddit API Compliance</h3>
                 <p className="text-gray-700 mb-4">
-                  The Service integrates with third-party services, including:
+                  ClientHunt uses Reddit's official API (AsyncPRAW) in compliance with Reddit's Terms of Service and API Guidelines. We:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
-                  <li><strong>Reddit:</strong> We access publicly available Reddit content. We are not affiliated with Reddit and are not responsible for Reddit's availability or content.</li>
+                  <li>Maintain valid API credentials and respect all rate limits</li>
+                  <li>Only access publicly available posts and comments</li>
+                  <li>Do not engage in automated posting, voting, or interaction</li>
+                  <li>Comply with Reddit's robots.txt and usage policies</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  <strong>Important:</strong> ClientHunt is not affiliated with, endorsed by, or sponsored by Reddit Inc. Reddit is a trademark of Reddit Inc.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">12.2 Third-Party Service Changes</h3>
+                <p className="text-gray-700 mb-4">
+                  ClientHunt depends on third-party services, including Reddit's API. If Reddit:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Changes API pricing or access terms</li>
+                  <li>Deprecates or restricts API access</li>
+                  <li>Imposes new usage limitations</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  We reserve the right to:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Adjust our service offerings</li>
+                  <li>Modify pricing to reflect increased costs</li>
+                  <li>Suspend or limit features dependent on Reddit</li>
+                  <li>Provide 30 days notice of material changes</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  We are not liable for service disruptions caused by third-party API changes.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">12.3 Other Third-Party Services</h3>
+                <p className="text-gray-700 mb-4">
+                  The Service also integrates with:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
                   <li><strong>Paddle:</strong> Payment processing. Your use of Paddle is subject to their terms and conditions.</li>
                   <li><strong>Cloud Providers:</strong> Hosting and infrastructure services.</li>
+                  <li><strong>Email Services:</strong> For transactional and service emails.</li>
                 </ul>
                 <p className="text-gray-700">
                   We are not responsible for the availability, accuracy, or practices of third-party services.
@@ -273,6 +364,11 @@ export default function TermsOfServicePage() {
                 <p className="text-gray-700 mb-4">
                   Any disputes arising from these Terms or the Service shall be resolved through binding arbitration in accordance with the Arbitration Act of Bangladesh, except where prohibited by law. You waive your right to a jury trial and to participate in class actions.
                 </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">14.3 Data Protection Disputes</h3>
+                <p className="text-gray-700 mb-4">
+                  Notwithstanding Section 14.1, disputes related to data protection, privacy, or GDPR/CCPA compliance may be subject to the jurisdiction of the user's country of residence, as required by applicable data protection laws.
+                </p>
               </section>
 
               <section className="mb-8">
@@ -298,14 +394,35 @@ export default function TermsOfServicePage() {
               </section>
 
               <section className="mb-8">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Entire Agreement</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Force Majeure</h2>
+                <p className="text-gray-700 mb-4">
+                  ClientHunt is not liable for failures or delays due to:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Third-party API outages (Reddit, payment processors)</li>
+                  <li>Internet or infrastructure failures</li>
+                  <li>Natural disasters, pandemics, or government actions</li>
+                  <li>Changes to third-party terms of service</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  In such events, we will:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li>Provide reasonable notice when possible</li>
+                  <li>Work to restore service promptly</li>
+                  <li>Offer prorated refunds for extended outages (more than 7 days)</li>
+                </ul>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Entire Agreement</h2>
                 <p className="text-gray-700 mb-4">
                   These Terms, together with our Privacy Policy and Cookie Policy, constitute the entire agreement between you and ClientHunt regarding the Service and supersede all prior agreements and understandings.
                 </p>
               </section>
 
               <section className="mb-8">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Contact Information</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">19. Contact Information</h2>
                 <p className="text-gray-700 mb-4">
                   If you have questions about these Terms, please contact us:
                 </p>

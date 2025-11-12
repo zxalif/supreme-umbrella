@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
 import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -124,6 +125,7 @@ export default function RootLayout({
           expand={false}
           duration={4000}
         />
+        <CookieConsent />
       </body>
     </html>
   );
