@@ -15,9 +15,12 @@ import {
   clearAuthTokens,
   ApiClientError 
 } from './client';
+import type { User, Subscription } from '@/types/user';
 
 // Re-export ApiClientError for convenience
 export { ApiClientError };
+// Re-export User type for convenience
+export type { User, Subscription };
 
 export interface RegisterRequest {
   email: string;
@@ -54,23 +57,7 @@ export interface RefreshTokenResponse {
   user: User;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  full_name: string;
-  is_active: boolean;
-  is_verified: boolean;
-  subscription?: {
-    id: string;
-    plan: string;
-    status: string;
-    current_period_start: string;
-    current_period_end: string;
-    cancel_at_period_end: boolean;
-  };
-  created_at: string;
-  updated_at: string;
-}
+// User type is now imported from @/types/user
 
 export interface ForgotPasswordRequest {
   email: string;

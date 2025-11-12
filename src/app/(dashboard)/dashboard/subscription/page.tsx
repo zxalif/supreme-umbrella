@@ -11,7 +11,8 @@ import {
 } from '@/lib/api/subscriptions';
 import { PRICING_PLANS } from '@/types/subscription';
 import type { SubscriptionPlan, Subscription } from '@/types/subscription';
-import { ApiClientError } from '@/lib/api/client';
+import { ApiClientError, extractErrorMessage } from '@/lib/api/client';
+import { showToast } from '@/components/ui/Toast';
 import { AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 
 /**
@@ -44,6 +45,7 @@ export default function SubscriptionPage() {
       // Only refresh if explicitly needed (e.g., after successful payment)
     } catch (err) {
       console.error('Failed to load subscription:', err);
+      showToast.error('Failed to load subscription', extractErrorMessage(err as any, 'Failed to load subscription'));
     } finally {
       setIsLoading(false);
     }
@@ -94,11 +96,12 @@ export default function SubscriptionPage() {
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         // Extract user-friendly error message
-        const errorMessage = err.data.message || err.data.detail || 'Failed to create checkout session';
+        const errorMessage = extractErrorMessage(err.data, 'Failed to create checkout session');
         
         // Add additional context for specific error codes
         let displayMessage = errorMessage;
-        if (err.data.error_code === 'transaction_default_checkout_url_not_set') {
+        const errorCode = (err.data as any).error_code || (typeof err.data.detail === 'object' && !Array.isArray(err.data.detail) && 'error_code' in err.data.detail ? (err.data.detail as any).error_code : undefined);
+        if (errorCode === 'transaction_default_checkout_url_not_set') {
           displayMessage = `${errorMessage}\n\nPlease configure the default checkout URL in your Paddle dashboard under Checkout Settings.`;
         }
         

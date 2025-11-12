@@ -564,15 +564,21 @@ export default function DashboardPage() {
               }`}>
                 {user.subscription.status === 'active' ? (
                   user.subscription.plan === 'free' ? (
-                    <>
-                      Free trial expires on{' '}
-                      <span className="font-semibold">
-                        {new Date(user.subscription.current_period_end).toLocaleDateString()}
-                      </span>
-                      {' '}({Math.ceil((new Date(user.subscription.current_period_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining)
-                    </>
+                    user.subscription.current_period_end ? (
+                      <>
+                        Free trial expires on{' '}
+                        <span className="font-semibold">
+                          {new Date(user.subscription.current_period_end).toLocaleDateString()}
+                        </span>
+                        {' '}({Math.ceil((new Date(user.subscription.current_period_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining)
+                      </>
+                    ) : (
+                      'Free trial active'
+                    )
                   ) : (
-                    `Active until ${new Date(user.subscription.current_period_end).toLocaleDateString()}`
+                    user.subscription.current_period_end 
+                      ? `Active until ${new Date(user.subscription.current_period_end).toLocaleDateString()}`
+                      : 'Active subscription'
                   )
                 ) : (
                   'Subscription status: ' + user.subscription.status

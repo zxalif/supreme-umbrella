@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { login, resendVerificationEmail, ApiClientError } from '@/lib/api/auth';
+import { extractErrorMessage } from '@/lib/api/client';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -116,7 +117,7 @@ export default function LoginPage() {
         if (error.status === 401) {
           setErrors({ general: 'Invalid email or password' });
         } else if (error.status === 403) {
-          const errorMessage = error.data?.detail || 'Your account is not active. Please contact support.';
+          const errorMessage = extractErrorMessage(error.data, 'Your account is not active. Please contact support.');
           if (errorMessage.toLowerCase().includes('email not verified') || errorMessage.toLowerCase().includes('verify')) {
             setErrors({ general: errorMessage });
             setShowResendVerification(true);
@@ -124,7 +125,7 @@ export default function LoginPage() {
             setErrors({ general: errorMessage });
           }
         } else {
-          setErrors({ general: error.data?.detail || 'Login failed' });
+          setErrors({ general: extractErrorMessage(error.data, 'Login failed') });
         }
       } else {
         setErrors({ general: 'An unexpected error occurred' });
@@ -163,7 +164,7 @@ export default function LoginPage() {
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (error) {
       if (error instanceof ApiClientError) {
-        setErrors({ general: error.data?.detail || 'Failed to resend verification email' });
+        setErrors({ general: extractErrorMessage(error.data, 'Failed to resend verification email') });
       } else {
         setErrors({ general: 'Failed to resend verification email' });
       }

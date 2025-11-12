@@ -90,19 +90,19 @@ export function extractFieldErrors(errors: any): Record<string, string> {
       const firstMessage = messages[0];
       if (typeof firstMessage === 'string') {
         fieldErrors[field] = firstMessage;
-      } else if (firstMessage?.msg) {
+      } else if (firstMessage && typeof firstMessage === 'object' && 'msg' in firstMessage) {
         fieldErrors[field] = String(firstMessage.msg);
-      } else if (firstMessage?.message) {
+      } else if (firstMessage && typeof firstMessage === 'object' && 'message' in firstMessage) {
         fieldErrors[field] = String(firstMessage.message);
       } else {
         fieldErrors[field] = String(firstMessage);
       }
     } else if (typeof messages === 'string') {
       fieldErrors[field] = messages;
-    } else if (messages?.msg) {
-      fieldErrors[field] = String(messages.msg);
-    } else if (messages?.message) {
-      fieldErrors[field] = String(messages.message);
+    } else if (messages && typeof messages === 'object' && 'msg' in messages) {
+      fieldErrors[field] = String((messages as any).msg);
+    } else if (messages && typeof messages === 'object' && 'message' in messages) {
+      fieldErrors[field] = String((messages as any).message);
     } else {
       fieldErrors[field] = String(messages);
     }

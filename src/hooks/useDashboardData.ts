@@ -93,10 +93,12 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
       setError(null);
 
       // Fetch data in parallel
-      const [opportunitiesData, searchesData] = await Promise.all([
+      const [opportunitiesResponse, searchesData] = await Promise.all([
         listOpportunities({ limit: opportunitiesLimit, offset: 0 }),
         listKeywordSearches(),
       ]);
+
+      const opportunitiesData = opportunitiesResponse.items;
 
       const stats = calculateStats(opportunitiesData, searchesData);
 

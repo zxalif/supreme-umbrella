@@ -10,12 +10,12 @@
  * - Page view tracking
  */
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { business, gtag, performance, errors } from '@/lib/analytics';
 
 // Track page views
-export function usePageView() {
+function PageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -25,7 +25,10 @@ export function usePageView() {
       gtag.pageView(url);
     }
   }, [pathname, searchParams]);
+
+  return null;
 }
+
 
 // Initialize analytics
 export function useAnalytics() {
@@ -40,10 +43,16 @@ interface AnalyticsProviderProps {
 }
 
 export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
-  usePageView();
   useAnalytics();
 
-  return <>{children}</>;
+  return (
+    <>
+      <Suspense fallback={null}>
+        <PageViewTracker />
+      </Suspense>
+      {children}
+    </>
+  );
 }
 
 // Export tracking functions for use throughout the app

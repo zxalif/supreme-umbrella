@@ -35,7 +35,7 @@ export const performance = {
   trackWebVitals: () => {
     if (typeof window !== 'undefined') {
       try {
-        import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+        import('web-vitals').then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
           // Track Core Web Vitals and send to Google Analytics
           onCLS((metric) => {
             gtag.track({
@@ -46,14 +46,17 @@ export const performance = {
             });
           });
           
-          onFID((metric) => {
-            gtag.track({
-              action: 'web_vital',
-              category: 'Performance',
-              label: 'FID',
-              value: Math.round(metric.value),
+          // Use onINP instead of onFID (FID was deprecated in favor of INP)
+          if (onINP) {
+            onINP((metric) => {
+              gtag.track({
+                action: 'web_vital',
+                category: 'Performance',
+                label: 'INP',
+                value: Math.round(metric.value),
+              });
             });
-          });
+          }
           
           onFCP((metric) => {
             gtag.track({

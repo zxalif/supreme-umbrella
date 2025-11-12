@@ -4,6 +4,11 @@
  * TypeScript types for user-related data
  */
 
+import type { Subscription } from './subscription';
+
+// Re-export Subscription for convenience
+export type { Subscription };
+
 export interface User {
   id: string;
   email: string;
@@ -13,14 +18,5 @@ export interface User {
   subscription?: Subscription;
   created_at: string;
   updated_at: string;
-}
-
-export interface Subscription {
-  id: string;
-  plan: 'starter' | 'professional' | 'power';
-  status: 'active' | 'canceled' | 'past_due' | 'trialing';
-  current_period_start: string;
-  current_period_end: string;
-  cancel_at_period_end: boolean;
 }
 

@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyEmail, ApiClientError } from '@/lib/api/auth';
+import { extractErrorMessage } from '@/lib/api/client';
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from 'lucide-react';
 
 /**
- * Email Verification Page
+ * Email Verification Content Component
  * 
  * Handles email verification via token from email link
  */
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -42,7 +43,7 @@ export default function VerifyEmailPage() {
       } catch (error) {
         setStatus('error');
         if (error instanceof ApiClientError) {
-          const errorDetail = error.data?.detail || 'Verification failed. The link may have expired.';
+          const errorDetail = extractErrorMessage(error.data, 'Verification failed. The link may have expired.');
           setMessage(errorDetail);
           
           // If token is invalid/expired, suggest resending
@@ -135,6 +136,41 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Email Verification Page
+ * 
+ * Wraps the verification content in Suspense for useSearchParams
+ */
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/20 flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center space-x-2 mb-6 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <span className="text-white font-bold text-xl">C</span>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                ClientHunt
+              </span>
+            </Link>
+          </div>
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200">
+            <div className="text-center py-8">
+              <Loader2 className="w-12 h-12 text-primary-500 animate-spin mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h2>
+              <p className="text-gray-600">Please wait while we load the verification page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
 

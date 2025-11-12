@@ -113,7 +113,18 @@ export class ApiClientError extends Error {
     public data: ApiError,
     message?: string
   ) {
-    super(message || data.detail || 'API request failed');
+    // Extract message from data.detail (can be string, object, or array)
+    let detailMessage = 'API request failed';
+    if (data.detail) {
+      if (typeof data.detail === 'string') {
+        detailMessage = data.detail;
+      } else if (typeof data.detail === 'object' && !Array.isArray(data.detail) && 'message' in data.detail) {
+        detailMessage = data.detail.message;
+      } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+        detailMessage = data.detail[0]?.msg || String(data.detail[0]);
+      }
+    }
+    super(message || detailMessage);
     this.name = 'ApiClientError';
   }
 }
@@ -244,9 +255,9 @@ export async function apiRequest<T = any>(
   const url = `${API_BASE_URL}${endpoint}`;
   let token = getAuthToken();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {
@@ -255,7 +266,7 @@ export async function apiRequest<T = any>(
 
   const config: RequestInit = {
     ...options,
-    headers,
+    headers: headers as HeadersInit,
   };
 
   try {
@@ -267,8 +278,8 @@ export async function apiRequest<T = any>(
       
       if (newToken) {
         // Retry the request with new token
-        headers['Authorization'] = `Bearer ${newToken}`;
-        const retryResponse = await fetch(url, { ...config, headers });
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+        const retryResponse = await fetch(url, { ...config, headers: headers as HeadersInit });
         
         // Handle 204 No Content (empty response)
         if (retryResponse.status === 204) {
@@ -404,16 +415,13 @@ export async function apiRequest<T = any>(
       }
       
       // Handle structured error responses (from backend)
-      if (data.detail && typeof data.detail === 'object' && data.detail.message) {
+      if (data.detail && typeof data.detail === 'object' && !Array.isArray(data.detail) && 'message' in data.detail) {
         // Backend returns structured error with message
+        const errorDetail = data.detail as { message: string; error_code?: string; error_type?: string; paddle_error?: string; documentation_url?: string; request_id?: string };
+        // Create error object with detail as the structured object (preserves all fields)
         throw new ApiClientError(response.status, {
-          detail: data.detail.message,
-          message: data.detail.message,
-          error_code: data.detail.error_code,
-          error_type: data.detail.error_type,
-          paddle_error: data.detail.paddle_error,
-          documentation_url: data.detail.documentation_url,
-          request_id: data.detail.request_id,
+          detail: data.detail, // Keep the full structured detail
+          message: errorDetail.message,
         });
       }
       throw new ApiClientError(response.status, data);

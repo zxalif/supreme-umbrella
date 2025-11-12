@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreditCard, Download, Calendar, AlertCircle } from 'lucide-react';
+import { CreditCard, Download, Calendar } from 'lucide-react';
 import { getCurrentSubscription } from '@/lib/api/subscriptions';
 import type { Subscription } from '@/types/subscription';
+import { showToast } from '@/components/ui/Toast';
+import { extractErrorMessage } from '@/lib/api/client';
 
 /**
  * Billing History Component
@@ -13,17 +15,15 @@ import type { Subscription } from '@/types/subscription';
 export function BillingHistory() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSubscription = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         const sub = await getCurrentSubscription();
         setSubscription(sub);
       } catch (err: any) {
-        setError(err?.data?.detail || 'Failed to load subscription history');
+        showToast.error('Failed to load subscription history', extractErrorMessage(err, 'Failed to load subscription history'));
       } finally {
         setIsLoading(false);
       }
@@ -42,16 +42,18 @@ export function BillingHistory() {
     );
   }
 
-  if (error) {
+  if (!subscription) {
     return (
-      <div className="card bg-red-50 border-red-200">
-        <div className="flex items-start">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="text-sm font-semibold text-red-800 mb-1">Error</h3>
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
+      <div className="card text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CreditCard className="w-8 h-8 text-gray-400" />
         </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          No Subscription Found
+        </h3>
+        <p className="text-gray-600">
+          Unable to load subscription information.
+        </p>
       </div>
     );
   }

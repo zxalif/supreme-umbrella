@@ -456,44 +456,47 @@ function SupportPageContent() {
 
                 {/* Message Input */}
                 <div className="p-4 border-t border-gray-200">
-                  {selectedThread.status === 'closed' ? (
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                      <p className="text-sm text-gray-600 mb-2">
-                        This thread is closed. You cannot send new messages.
-                      </p>
-                      <button
-                        onClick={handleNewThread}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Create a new support request →
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex space-x-3">
-                      <input
-                        type="text"
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        placeholder="Type your message..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={isSending || selectedThread.status === 'closed'}
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={isSending || !messageInput.trim() || selectedThread.status === 'closed'}
-                        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                      >
-                        <Send className="w-5 h-5" />
-                        <span>Send</span>
-                      </button>
-                    </div>
-                  )}
+                  {(() => {
+                    const isClosed = selectedThread.status === 'closed';
+                    return isClosed ? (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                        <p className="text-sm text-gray-600 mb-2">
+                          This thread is closed. You cannot send new messages.
+                        </p>
+                        <button
+                          onClick={handleNewThread}
+                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Create a new support request →
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex space-x-3">
+                        <input
+                          type="text"
+                          value={messageInput}
+                          onChange={(e) => setMessageInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          placeholder="Type your message..."
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={isSending || isClosed}
+                        />
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={isSending || !messageInput.trim() || isClosed}
+                          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        >
+                          <Send className="w-5 h-5" />
+                          <span>Send</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             ) : (

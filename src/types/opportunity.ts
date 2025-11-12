@@ -6,8 +6,8 @@
 
 export interface ExtractedInfo {
   budget?: string | number;
-  budget_min?: number;
-  budget_max?: number;
+  budget_min?: number | string;
+  budget_max?: number | string;
   budget_currency?: string;
   timeline?: string;
   deadline?: string;

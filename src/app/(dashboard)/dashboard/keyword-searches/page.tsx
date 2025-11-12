@@ -63,7 +63,7 @@ export default function KeywordSearchesPage() {
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         if (err.status === 402) {
-          showToast.error('Search Limit Reached', err.data.detail || 'Keyword search limit reached. Please disable or delete an existing search.');
+          showToast.error('Search Limit Reached', extractErrorMessage(err.data, 'Keyword search limit reached. Please disable or delete an existing search.'));
         } else {
           showToast.error('Failed to create keyword search', extractErrorMessage(err, 'Failed to create keyword search'));
         }
