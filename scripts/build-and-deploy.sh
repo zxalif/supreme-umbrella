@@ -22,7 +22,18 @@ PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 cd "$PROJECT_ROOT"
 
-echo -e "${YELLOW}Step 1: Building Next.js application...${NC}"
+echo -e "${YELLOW}Step 1: Installing/updating dependencies...${NC}"
+npm install
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ npm install failed!${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Dependencies installed successfully${NC}"
+echo ""
+
+echo -e "${YELLOW}Step 2: Building Next.js application...${NC}"
 npm run build
 
 if [ $? -ne 0 ]; then
@@ -40,7 +51,7 @@ if [ ! -d ".next/standalone" ]; then
     exit 1
 fi
 
-echo -e "${YELLOW}Step 2: Copying static files...${NC}"
+echo -e "${YELLOW}Step 3: Copying static files...${NC}"
 
 # Copy .next/static to standalone/.next/static
 if [ -d ".next/static" ]; then
@@ -88,7 +99,7 @@ echo ""
 read -p "Do you want to restart PM2? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Step 3: Restarting PM2...${NC}"
+    echo -e "${YELLOW}Step 4: Restarting PM2...${NC}"
     
     # Check if PM2 process exists
     if pm2 list | grep -q "clienthunt-frontend"; then
