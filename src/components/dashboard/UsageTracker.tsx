@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getUsage, type UsageResponse } from '@/lib/api/usage';
 import { extractErrorMessage } from '@/lib/api/client';
+import { showToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 interface UsageTrackerProps {
@@ -41,7 +42,6 @@ export function UsageTracker({
 }: UsageTrackerProps) {
   const [usage, setUsage] = useState<UsageResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsage();
@@ -50,11 +50,10 @@ export function UsageTracker({
   const loadUsage = async () => {
     try {
       setIsLoading(true);
-      setError(null);
       const data = await getUsage();
       setUsage(data);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load usage data'));
+      showToast.error('Failed to load usage data', extractErrorMessage(err, 'Failed to load usage data'));
     } finally {
       setIsLoading(false);
     }
@@ -106,23 +105,20 @@ export function UsageTracker({
     );
   }
 
-  if (error) {
+  if (!usage) {
     return (
-      <div className={`card bg-red-50 border-red-200 ${className}`}>
+      <div className={`card ${className}`}>
         {showHeader && (
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-red-900">Usage Tracking</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Usage Tracking</h3>
           </div>
         )}
-        <div className="flex items-center space-x-2 text-red-700">
-          <AlertCircle className="w-5 h-5" />
-          <p className="text-sm">{error}</p>
+        <div className="text-center py-4 text-gray-500 text-sm">
+          No usage data available
         </div>
       </div>
     );
   }
-
-  if (!usage) return null;
 
   const metrics = [
     {

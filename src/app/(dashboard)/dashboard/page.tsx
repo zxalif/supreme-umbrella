@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { listOpportunities } from '@/lib/api/opportunities';
 import { listKeywordSearches } from '@/lib/api/keyword-searches';
 import { extractErrorMessage } from '@/lib/api/client';
+import { showToast } from '@/components/ui/Toast';
 import { ModernOpportunityCard } from '@/components/dashboard/ModernOpportunityCard';
 import { updateOpportunity } from '@/lib/api/opportunities';
 import { EnhancedStatCard } from '@/components/dashboard/EnhancedStatCard';
@@ -47,7 +48,6 @@ export default function DashboardPage() {
   const { savedInsights, removeInsight } = useSavedInsights();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   // Data state
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -69,7 +69,6 @@ export default function DashboardPage() {
       } else {
         setIsLoading(true);
       }
-      setError(null);
 
       // Load user if needed
       if (!user) {
@@ -123,7 +122,7 @@ export default function DashboardPage() {
       });
     } catch (err: any) {
       console.error('Failed to load dashboard data:', err);
-      setError(extractErrorMessage(err) || 'Failed to load dashboard data');
+      showToast.error('Failed to load dashboard data', extractErrorMessage(err) || 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -216,25 +215,6 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
-
-      {/* Error Banner */}
-      {error && (
-        <div className="card bg-red-50 border-2 border-red-200">
-          <div className="flex items-center space-x-3">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-900">Error loading data</p>
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-            <button
-              onClick={() => loadData()}
-              className="text-sm text-red-600 hover:text-red-700 font-medium"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Quick Insights */}
       <QuickInsights 

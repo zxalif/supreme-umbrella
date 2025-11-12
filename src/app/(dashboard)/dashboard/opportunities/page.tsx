@@ -54,7 +54,6 @@ export default function OpportunitiesPage() {
   const [keywordSearches, setKeywordSearches] = useState<KeywordSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [cooldownMessage, setCooldownMessage] = useState<string | null>(null);
   const [forceRefresh, setForceRefresh] = useState(false);
   
@@ -122,7 +121,6 @@ export default function OpportunitiesPage() {
 
   const loadOpportunities = async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const filters: OpportunityFilters = {
         limit: 100, // API maximum limit
@@ -188,9 +186,9 @@ export default function OpportunitiesPage() {
       setOpportunities(filteredData);
     } catch (err: any) {
       if (err instanceof ApiClientError) {
-        setError(extractErrorMessage(err.data));
+        showToast.error('Failed to load opportunities', extractErrorMessage(err.data));
       } else {
-        setError(extractErrorMessage(err) || 'Failed to load opportunities');
+        showToast.error('Failed to load opportunities', extractErrorMessage(err) || 'Failed to load opportunities');
       }
     } finally {
       setIsLoading(false);
@@ -201,13 +199,11 @@ export default function OpportunitiesPage() {
     try {
       const updated = await updateOpportunity(id, { status, notes });
       setOpportunities(opportunities.map(o => o.id === id ? updated : o));
-      setError(null);
       showToast.success('Opportunity updated successfully');
     } catch (err: any) {
       const errorMessage = err instanceof ApiClientError 
         ? extractErrorMessage(err.data)
         : extractErrorMessage(err) || 'Failed to update opportunity';
-      setError(errorMessage);
       showToast.error('Failed to update opportunity', errorMessage);
       throw err;
     }
@@ -254,7 +250,6 @@ export default function OpportunitiesPage() {
           if (status.status === 'completed' && status.result) {
             // Refresh opportunities to show new ones
             await loadOpportunities();
-            setError(null);
             
             // Check for cooldown message in result (highest priority)
             if (status.result.cooldown_message) {
@@ -271,16 +266,21 @@ export default function OpportunitiesPage() {
               setCooldownMessage(null);
             }
           } else if (status.status === 'failed') {
-            setError(status.error || 'Opportunity generation failed');
+            const errorMsg = status.error || 'Opportunity generation failed';
             
             // Check if error is a cooldown message
             if (status.error && status.error.toLowerCase().includes('cooldown')) {
               const cooldownMatch = status.error.match(/Wait ([\d.]+) more (minute|minutes)/i);
               if (cooldownMatch) {
-                setCooldownMessage(`Cooldown active: ${cooldownMatch[0]}. Using existing leads instead.`);
+                const cooldownMsg = `Cooldown active: ${cooldownMatch[0]}. Using existing leads instead.`;
+                setCooldownMessage(cooldownMsg);
+                showToast.warning('Cooldown Active', cooldownMsg);
               } else {
                 setCooldownMessage(status.error);
+                showToast.warning('Cooldown Active', status.error);
               }
+            } else {
+              showToast.error('Generation failed', errorMsg);
             }
           }
           setActiveJob(null);
@@ -304,18 +304,17 @@ export default function OpportunitiesPage() {
 
   const handleGenerate = async () => {
     if (selectedKeywordSearch === 'all') {
-      setError('Please select a keyword search first');
+      showToast.error('Validation Error', 'Please select a keyword search first');
       return;
     }
 
     // Check if there's already an active job
     if (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) {
-      setError('Opportunity generation is already in progress for this search');
+      showToast.warning('Generation in Progress', 'Opportunity generation is already in progress for this search');
       return;
     }
 
     setIsGenerating(true);
-    setError(null);
     setCooldownMessage(null);
     
     console.log(`[Frontend] Generating opportunities with force_refresh=${forceRefresh} for search: ${selectedKeywordSearch}`);
@@ -338,7 +337,6 @@ export default function OpportunitiesPage() {
       
       // Show success message
       if (result.opportunities_created > 0) {
-        setError(null);
         showToast.success(`Generated ${result.opportunities_created} new opportunities`);
         
         // Check for cooldown message in result
@@ -354,23 +352,26 @@ export default function OpportunitiesPage() {
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         const errorMessage = extractErrorMessage(err.data);
-        setError(errorMessage || 'Failed to generate opportunities');
         
         // Check if it's a cooldown error (409 Conflict)
         if (err.status === 409) {
           // Extract cooldown message from error
           const cooldownMatch = errorMessage.match(/Wait ([\d.]+) more (minute|minutes)/i);
           if (cooldownMatch) {
-            setCooldownMessage(
-              `Cooldown active: ${cooldownMatch[0]}. Using existing leads instead.`
-            );
+            const cooldownMsg = `Cooldown active: ${cooldownMatch[0]}. Using existing leads instead.`;
+            setCooldownMessage(cooldownMsg);
+            showToast.warning('Cooldown Active', cooldownMsg);
           } else if (errorMessage.toLowerCase().includes('cooldown')) {
             setCooldownMessage(errorMessage);
+            showToast.warning('Cooldown Active', errorMessage);
+          } else {
+            showToast.error('Generation failed', errorMessage || 'Failed to generate opportunities');
           }
+        } else {
+          showToast.error('Generation failed', errorMessage || 'Failed to generate opportunities');
         }
       } else {
         const errorMessage = extractErrorMessage(err) || 'Failed to generate opportunities';
-        setError(errorMessage);
         showToast.error('Generation failed', errorMessage);
       }
       setActiveJob(null);
@@ -403,9 +404,8 @@ export default function OpportunitiesPage() {
       showToast.success('Opportunities exported successfully');
     } catch (err: any) {
       console.error('Export failed:', err);
-      const errorMessage = 'Failed to export opportunities';
-      setError(errorMessage);
-      showToast.error(errorMessage);
+      const errorMessage = extractErrorMessage(err, 'Failed to export opportunities');
+      showToast.error('Export failed', errorMessage);
     }
   };
 
@@ -560,25 +560,6 @@ export default function OpportunitiesPage() {
             <button
               onClick={() => setCooldownMessage(null)}
               className="text-yellow-600 hover:text-yellow-800"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="card bg-red-50 border-red-200">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-red-800 mb-1">Error</h3>
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800"
             >
               <X className="w-4 h-4" />
             </button>

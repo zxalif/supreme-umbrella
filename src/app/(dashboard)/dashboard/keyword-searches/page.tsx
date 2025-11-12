@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Search, AlertCircle } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { KeywordSearchCard } from '@/components/dashboard/KeywordSearchCard';
 import { KeywordSearchForm } from '@/components/dashboard/KeywordSearchForm';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/keyword-searches';
 import type { KeywordSearch, KeywordSearchCreate } from '@/types/keyword-search';
 import { ApiClientError, extractErrorMessage } from '@/lib/api/client';
+import { showToast } from '@/components/ui/Toast';
 
 /**
  * Keyword Searches Page
@@ -25,7 +26,6 @@ export default function KeywordSearchesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSearch, setEditingSearch] = useState<KeywordSearch | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'paused'>('all');
 
   useEffect(() => {
@@ -39,13 +39,12 @@ export default function KeywordSearchesPage() {
 
   const loadSearches = async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const enabled = filter === 'all' ? undefined : filter === 'active';
       const data = await listKeywordSearches(enabled);
       setSearches(data);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load keyword searches'));
+      showToast.error('Failed to load keyword searches', extractErrorMessage(err, 'Failed to load keyword searches'));
     } finally {
       setIsLoading(false);
     }
@@ -60,13 +59,13 @@ export default function KeywordSearchesPage() {
       const newSearch = await createKeywordSearch(data);
       setSearches([...searches, newSearch]);
       setShowForm(false);
-      setError(null);
+      showToast.success('Keyword search created successfully');
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         if (err.status === 402) {
-          setError(err.data.detail || 'Keyword search limit reached. Please disable or delete an existing search.');
+          showToast.error('Search Limit Reached', err.data.detail || 'Keyword search limit reached. Please disable or delete an existing search.');
         } else {
-          setError(extractErrorMessage(err, 'Failed to create keyword search'));
+          showToast.error('Failed to create keyword search', extractErrorMessage(err, 'Failed to create keyword search'));
         }
         throw err;
       }
@@ -81,9 +80,9 @@ export default function KeywordSearchesPage() {
       const updated = await updateKeywordSearch(editingSearch.id, data);
       setSearches(searches.map(s => s.id === updated.id ? updated : s));
       setEditingSearch(null);
-      setError(null);
+      showToast.success('Keyword search updated successfully');
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to update keyword search'));
+      showToast.error('Failed to update keyword search', extractErrorMessage(err, 'Failed to update keyword search'));
       throw err;
     }
   };
@@ -92,12 +91,12 @@ export default function KeywordSearchesPage() {
     try {
       await deleteKeywordSearch(id);
       setSearches(searches.filter(s => s.id !== id));
-      setError(null);
+      showToast.success('Keyword search deleted successfully');
     } catch (err: any) {
       if (err instanceof ApiClientError) {
-        setError(extractErrorMessage(err.data) || 'Failed to delete keyword search');
+        showToast.error('Failed to delete keyword search', extractErrorMessage(err.data) || 'Failed to delete keyword search');
       } else {
-        setError(extractErrorMessage(err) || 'Failed to delete keyword search');
+        showToast.error('Failed to delete keyword search', extractErrorMessage(err) || 'Failed to delete keyword search');
       }
       throw err;
     }
@@ -110,9 +109,9 @@ export default function KeywordSearchesPage() {
       
       const updated = await updateKeywordSearch(id, { enabled });
       setSearches(searches.map(s => s.id === id ? updated : s));
-      setError(null);
+      showToast.success(`Keyword search ${enabled ? 'enabled' : 'disabled'} successfully`);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to update keyword search'));
+      showToast.error('Failed to update keyword search', extractErrorMessage(err, 'Failed to update keyword search'));
     }
   };
 
@@ -124,7 +123,6 @@ export default function KeywordSearchesPage() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingSearch(null);
-    setError(null);
   };
 
   const filteredSearches = searches.filter(search => {
@@ -174,19 +172,6 @@ export default function KeywordSearchesPage() {
           Create Search
         </button>
       </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="card bg-red-50 border-red-200">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-red-800 mb-1">Error</h3>
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="flex items-center space-x-2">

@@ -45,13 +45,34 @@ export interface ApiError {
 /**
  * Extract error message from API error response
  * Handles Pydantic validation errors and other error formats
+ * @param error - The error object to extract message from
+ * @param fallback - Optional fallback message if error cannot be extracted
  */
-export function extractErrorMessage(error: ApiError | any): string {
-  if (!error) return 'An unknown error occurred';
+export function extractErrorMessage(error: ApiError | any, fallback: string = 'An unknown error occurred'): string {
+  if (!error) return fallback;
   
   // If it's already a string
   if (typeof error === 'string') {
     return error;
+  }
+  
+  // Handle ApiClientError with data.detail
+  if (error?.data?.detail) {
+    const detail = error.data.detail;
+    if (typeof detail === 'string') {
+      return detail;
+    }
+    if (typeof detail === 'object' && detail.message) {
+      return detail.message;
+    }
+    if (Array.isArray(detail)) {
+      return detail
+        .map((err: any) => {
+          const field = Array.isArray(err.loc) ? err.loc.slice(1).join('.') : 'field';
+          return `${field}: ${err.msg}`;
+        })
+        .join(', ');
+    }
   }
   
   // If it has a detail field
@@ -79,11 +100,11 @@ export function extractErrorMessage(error: ApiError | any): string {
   
   // If it has a message field
   if (error.message) {
-    return typeof error.message === 'string' ? error.message : 'An error occurred';
+    return typeof error.message === 'string' ? error.message : fallback;
   }
   
   // Fallback
-  return 'An unknown error occurred';
+  return fallback;
 }
 
 export class ApiClientError extends Error {

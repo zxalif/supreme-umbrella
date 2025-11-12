@@ -12,6 +12,7 @@ import { SavedInsights, useSavedInsights } from '@/components/dashboard/SavedIns
 import { listOpportunities } from '@/lib/api/opportunities';
 import { listKeywordSearches } from '@/lib/api/keyword-searches';
 import { extractErrorMessage } from '@/lib/utils/error-handler';
+import { showToast } from '@/components/ui/Toast';
 import { exportToCSV, exportAnalyticsToCSV, exportToPDF, generatePDFHTML } from '@/lib/utils/export';
 import type { DateRange } from '@/components/dashboard/DateRangePicker';
 import type { Opportunity } from '@/types/opportunity';
@@ -28,7 +29,6 @@ export default function AnalyticsPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [keywordSearches, setKeywordSearches] = useState<KeywordSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { savedInsights, removeInsight } = useSavedInsights();
 
   useEffect(() => {
@@ -37,7 +37,6 @@ export default function AnalyticsPage() {
 
   const loadData = async () => {
     setIsLoading(true);
-    setError(null);
     try {
       // Load all opportunities with pagination (API limit is 100)
       // Fetch in batches until we get all opportunities
@@ -65,7 +64,7 @@ export default function AnalyticsPage() {
       const searches = await listKeywordSearches();
       setKeywordSearches(searches);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load analytics data'));
+      showToast.error('Failed to load analytics data', extractErrorMessage(err, 'Failed to load analytics data'));
     } finally {
       setIsLoading(false);
     }
@@ -141,14 +140,6 @@ export default function AnalyticsPage() {
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading analytics...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="card bg-red-50 border-red-200">
-        <p className="text-red-600">{error}</p>
       </div>
     );
   }
