@@ -381,14 +381,11 @@ export default function OpportunitiesPage() {
         forceRefresh
       );
       
-      // Store job ID in localStorage for persistence across reloads
-      if (result.job_id) {
-        localStorage.setItem('activeJobId', result.job_id);
-        localStorage.setItem('activeJobSearchId', selectedKeywordSearch);
-        localStorage.setItem('activeJobStartTime', Date.now().toString());
-      }
+      // Note: generateOpportunities is a blocking function that completes before returning,
+      // so we don't need to store job_id. The function handles polling internally.
+      // If we need to track jobs separately, we should use startGenerateOpportunities instead.
       
-      // Check for active job after starting (to show progress)
+      // Check for any other active jobs after completion
       await checkActiveJob();
       
       // Refresh opportunities

@@ -25,10 +25,10 @@ export interface TourState {
 
 // Dynamic import type for intro.js
 type IntroJs = typeof import('intro.js').default;
-type IntroJsInstance = ReturnType<IntroJs>;
+type IntroJsTour = ReturnType<IntroJs['tour']>;
 
 class TourService {
-  private introInstance: IntroJsInstance | null = null;
+  private introInstance: IntroJsTour | null = null;
   private introJsModule: IntroJs | null = null;
   private currentStepIndex: number = 0;
   private cssLoaded = false;
@@ -304,13 +304,13 @@ class TourService {
           }
         })
         .filter((step): step is {
-          element?: string;
+          element: string | undefined;
           intro: string;
-          position: string;
-          tooltipClass?: string;
-          highlightClass?: string;
-          _stepId?: string;
-          _allowClick?: boolean;
+          position: 'auto' | 'top' | 'left' | 'bottom' | 'right';
+          tooltipClass: string;
+          highlightClass: string;
+          _stepId: string;
+          _allowClick: boolean;
         } => step !== null);
 
       console.log('[Tour] Valid steps after filtering:', introSteps.length);
@@ -325,9 +325,11 @@ class TourService {
       this.introInstance = introJs.tour();
       
       // Set options
+      // Cast steps to any to avoid type mismatch - intro.js accepts 'auto' for position
+      // even though the types don't reflect it
       this.introInstance.setOptions({
         ...TOUR_OPTIONS,
-        steps: introSteps,
+        steps: introSteps as any,
         disableInteraction: false, // Allow clicking elements
         // Make sure we can interact with elements
         exitOnOverlayClick: false,
