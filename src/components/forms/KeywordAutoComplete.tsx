@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { MAX_KEYWORDS_PER_SEARCH } from '@/lib/constants/keyword-search';
 import { 
   KEYWORD_CATEGORIES, 
   searchKeywords, 
@@ -241,7 +242,8 @@ export function KeywordAutoComplete({
             }
           }}
           className="btn-outline"
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || selectedKeywords.length >= MAX_KEYWORDS_PER_SEARCH}
+          title={selectedKeywords.length >= MAX_KEYWORDS_PER_SEARCH ? `Maximum ${MAX_KEYWORDS_PER_SEARCH} keywords allowed` : 'Add keyword'}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -311,6 +313,11 @@ export function KeywordAutoComplete({
       )}
 
       {/* Selected Keywords */}
+      {selectedKeywords.length > 0 && (
+        <div className="mb-2 text-xs text-gray-500">
+          {selectedKeywords.length} / {MAX_KEYWORDS_PER_SEARCH} keywords
+        </div>
+      )}
       {selectedKeywords.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedKeywords.map((keyword, idx) => (

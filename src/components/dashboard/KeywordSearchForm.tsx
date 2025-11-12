@@ -6,6 +6,7 @@ import { extractErrorMessage, extractFieldErrors } from '@/lib/utils/error-handl
 import { KeywordAutoComplete } from '@/components/forms/KeywordAutoComplete';
 import { SubredditAutoComplete } from '@/components/forms/SubredditAutoComplete';
 import type { KeywordSearch, KeywordSearchCreate } from '@/types/keyword-search';
+import { MAX_KEYWORDS_PER_SEARCH, MAX_SUBREDDITS_PER_SEARCH } from '@/lib/constants/keyword-search';
 
 interface KeywordSearchFormProps {
   search?: KeywordSearch | null;
@@ -36,11 +37,20 @@ export function KeywordSearchForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addKeyword = (keyword: string) => {
+    if (formData.keywords.length >= MAX_KEYWORDS_PER_SEARCH) {
+      setErrors({ keywords: `Maximum ${MAX_KEYWORDS_PER_SEARCH} keywords allowed per search` });
+      return;
+    }
     if (keyword.trim() && !formData.keywords.includes(keyword.trim())) {
       setFormData({
         ...formData,
         keywords: [...formData.keywords, keyword.trim()],
       });
+      // Clear error if keyword was added successfully
+      if (errors.keywords) {
+        const { keywords, ...rest } = errors;
+        setErrors(rest);
+      }
     }
   };
 
@@ -52,12 +62,22 @@ export function KeywordSearchForm({
   };
 
   const addSubreddit = (subreddit: string) => {
+    const currentSubreddits = formData.subreddits || [];
+    if (currentSubreddits.length >= MAX_SUBREDDITS_PER_SEARCH) {
+      setErrors({ subreddits: `Maximum ${MAX_SUBREDDITS_PER_SEARCH} subreddits allowed per search` });
+      return;
+    }
     const cleanSubreddit = subreddit.replace(/^r\//, '').trim();
-    if (cleanSubreddit && !formData.subreddits?.includes(cleanSubreddit)) {
+    if (cleanSubreddit && !currentSubreddits.includes(cleanSubreddit)) {
       setFormData({
         ...formData,
-        subreddits: [...(formData.subreddits || []), cleanSubreddit],
+        subreddits: [...currentSubreddits, cleanSubreddit],
       });
+      // Clear error if subreddit was added successfully
+      if (errors.subreddits) {
+        const { subreddits, ...rest } = errors;
+        setErrors(rest);
+      }
     }
   };
 
@@ -79,6 +99,14 @@ export function KeywordSearchForm({
     }
     if (formData.keywords.length === 0) {
       setErrors({ keywords: 'At least one keyword is required' });
+      return;
+    }
+    if (formData.keywords.length > MAX_KEYWORDS_PER_SEARCH) {
+      setErrors({ keywords: `Maximum ${MAX_KEYWORDS_PER_SEARCH} keywords allowed per search` });
+      return;
+    }
+    if (formData.subreddits && formData.subreddits.length > MAX_SUBREDDITS_PER_SEARCH) {
+      setErrors({ subreddits: `Maximum ${MAX_SUBREDDITS_PER_SEARCH} subreddits allowed per search` });
       return;
     }
 
@@ -135,6 +163,7 @@ export function KeywordSearchForm({
               <p className="font-semibold mb-1">What skills or services are you looking for?</p>
               <p className="mb-1">Start typing to see suggestions, or browse popular keywords below.</p>
               <p>We'll search for posts containing these keywords on Reddit.</p>
+              <p className="mt-1 font-medium">Maximum {MAX_KEYWORDS_PER_SEARCH} keywords per search.</p>
             </div>
           </div>
         </div>
@@ -157,6 +186,7 @@ export function KeywordSearchForm({
               <p className="font-semibold mb-1">Which Reddit communities to search?</p>
               <p className="mb-1">Start typing to see suggestions, or browse popular subreddits below.</p>
               <p>Leave empty to search all subreddits. We'll suggest relevant subreddits based on your keywords.</p>
+              <p className="mt-1 font-medium">Maximum {MAX_SUBREDDITS_PER_SEARCH} subreddits per search.</p>
             </div>
           </div>
         </div>
@@ -166,6 +196,7 @@ export function KeywordSearchForm({
           onRemoveSubreddit={removeSubreddit}
           relatedKeywords={formData.keywords}
           placeholder="Type to search subreddits (e.g., forhire, hiring, freelance)"
+          error={errors.subreddits}
         />
       </div>
 

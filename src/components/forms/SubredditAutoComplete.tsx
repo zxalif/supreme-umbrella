@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Plus, ChevronUp } from 'lucide-react';
+import { MAX_SUBREDDITS_PER_SEARCH } from '@/lib/constants/keyword-search';
 import { 
   SUBREDDIT_CATEGORIES, 
   searchSubreddits, 
@@ -22,6 +23,7 @@ interface SubredditAutoCompleteProps {
   onRemoveSubreddit: (subreddit: string) => void;
   relatedKeywords?: string[]; // Keywords to suggest related subreddits
   placeholder?: string;
+  error?: string;
 }
 
 /**
@@ -39,6 +41,7 @@ export function SubredditAutoComplete({
   onRemoveSubreddit,
   relatedKeywords = [],
   placeholder = 'e.g., forhire, hiring, freelance (without r/)',
+  error,
 }: SubredditAutoCompleteProps) {
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -249,8 +252,9 @@ export function SubredditAutoComplete({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDown}
-            className="input pl-8"
+            className={`input pl-8 ${error ? 'input-error' : ''}`}
             placeholder={placeholder}
+            disabled={selectedSubreddits.length >= MAX_SUBREDDITS_PER_SEARCH}
           />
           {showSuggestions && filteredSuggestions.length > 0 && (
             <button
@@ -270,7 +274,8 @@ export function SubredditAutoComplete({
             }
           }}
           className="btn-outline"
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || selectedSubreddits.length >= MAX_SUBREDDITS_PER_SEARCH}
+          title={selectedSubreddits.length >= MAX_SUBREDDITS_PER_SEARCH ? `Maximum ${MAX_SUBREDDITS_PER_SEARCH} subreddits allowed` : 'Add subreddit'}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -360,7 +365,17 @@ export function SubredditAutoComplete({
         </div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <p className="text-sm text-red-600 mb-2">{error}</p>
+      )}
+
       {/* Selected Subreddits */}
+      {selectedSubreddits.length > 0 && (
+        <div className="mb-2 text-xs text-gray-500">
+          {selectedSubreddits.length} / {MAX_SUBREDDITS_PER_SEARCH} subreddits
+        </div>
+      )}
       {selectedSubreddits.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedSubreddits.map((subreddit, idx) => (
