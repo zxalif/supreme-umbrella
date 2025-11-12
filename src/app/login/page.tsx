@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { login, resendVerificationEmail, ApiClientError } from '@/lib/api/auth';
 import { extractErrorMessage } from '@/lib/api/client';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { showToast } from '@/components/ui/Toast';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 /**
  * Login Page
@@ -27,7 +28,6 @@ export default function LoginPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Check if user is already authenticated and redirect
   useEffect(() => {
@@ -60,8 +60,7 @@ export default function LoginPage() {
   useEffect(() => {
     const verified = new URLSearchParams(window.location.search).get('verified');
     if (verified === 'true') {
-      setResendSuccess(true);
-      setTimeout(() => setResendSuccess(false), 5000);
+      showToast.success('Email verified!', 'You can now sign in to your account.');
     }
   }, []);
 
@@ -115,20 +114,20 @@ export default function LoginPage() {
     } catch (error) {
       if (error instanceof ApiClientError) {
         if (error.status === 401) {
-          setErrors({ general: 'Invalid email or password' });
+          showToast.error('Invalid email or password', 'Please check your credentials and try again.');
         } else if (error.status === 403) {
           const errorMessage = extractErrorMessage(error.data, 'Your account is not active. Please contact support.');
           if (errorMessage.toLowerCase().includes('email not verified') || errorMessage.toLowerCase().includes('verify')) {
-            setErrors({ general: errorMessage });
+            showToast.error('Email Not Verified', errorMessage);
             setShowResendVerification(true);
           } else {
-            setErrors({ general: errorMessage });
+            showToast.error('Account Issue', errorMessage);
           }
         } else {
-          setErrors({ general: extractErrorMessage(error.data, 'Login failed') });
+          showToast.error('Login Failed', extractErrorMessage(error.data, 'An error occurred during login. Please try again.'));
         }
       } else {
-        setErrors({ general: 'An unexpected error occurred' });
+        showToast.error('Login Failed', 'An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -149,24 +148,45 @@ export default function LoginPage() {
   };
 
   const handleResendVerification = async () => {
-    if (!formData.email) {
-      setErrors({ general: 'Please enter your email address first' });
+    // Validate email is present
+    const emailToUse = formData.email?.trim();
+    if (!emailToUse) {
+      showToast.error('Email Required', 'Please enter your email address in the email field above, then click "Resend verification email" again.');
+      // Focus on email input
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      if (emailInput) {
+        emailInput.focus();
+      }
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToUse)) {
+      showToast.error('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
     setIsResending(true);
-    setResendSuccess(false);
+    setShowResendVerification(false);
     
     try {
-      await resendVerificationEmail({ email: formData.email });
-      setResendSuccess(true);
-      setShowResendVerification(false);
-      setTimeout(() => setResendSuccess(false), 5000);
+      await resendVerificationEmail({ email: emailToUse });
+      showToast.success('Verification Email Sent', 'Please check your email and click the verification link.');
     } catch (error) {
       if (error instanceof ApiClientError) {
-        setErrors({ general: extractErrorMessage(error.data, 'Failed to resend verification email') });
+        const errorMessage = extractErrorMessage(error.data, 'Failed to resend verification email');
+        // If it's a validation error about email field, show helpful message
+        if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('required')) {
+          showToast.error('Email Required', 'Please enter your email address in the email field above, then try again.');
+        } else {
+          showToast.error('Failed to Resend Email', errorMessage);
+        }
+        // Show resend button again if error
+        setShowResendVerification(true);
       } else {
-        setErrors({ general: 'Failed to resend verification email' });
+        showToast.error('Failed to Resend Email', 'An unexpected error occurred. Please try again.');
+        setShowResendVerification(true);
       }
     } finally {
       setIsResending(false);
@@ -202,34 +222,22 @@ export default function LoginPage() {
         {/* Form Card */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Success Message */}
-            {resendSuccess && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-start">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-green-800 font-medium">Verification email sent!</p>
-                  <p className="text-xs text-green-600 mt-1">Please check your email and click the verification link.</p>
-                </div>
-              </div>
-            )}
-
-            {/* General Error */}
-            {errors.general && (
-              <div className="p-4 bg-error-50 border border-error-200 rounded-xl">
+            {/* Resend Verification Button (shown when email not verified) */}
+            {showResendVerification && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-error-600 mr-3 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm text-error-600">{errors.general}</p>
-                    {showResendVerification && (
-                      <button
-                        type="button"
-                        onClick={handleResendVerification}
-                        disabled={isResending}
-                        className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isResending ? 'Sending...' : 'Resend verification email'}
-                      </button>
-                    )}
+                    <p className="text-sm text-blue-800 font-medium mb-2">Email verification required</p>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={isResending || !formData.email?.trim()}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={!formData.email?.trim() ? 'Please enter your email address first' : ''}
+                    >
+                      {isResending ? 'Sending...' : 'Resend verification email'}
+                    </button>
                   </div>
                 </div>
               </div>
