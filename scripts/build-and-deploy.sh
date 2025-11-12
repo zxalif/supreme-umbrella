@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Build and Deploy Script for ClientHunt Frontend
+# This script builds the Next.js app and copies necessary files for standalone deployment
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}ClientHunt Frontend - Build & Deploy${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+
+# Get the script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+cd "$PROJECT_ROOT"
+
+echo -e "${YELLOW}Step 1: Building Next.js application...${NC}"
+npm run build
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Build failed!${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Build completed successfully${NC}"
+echo ""
+
+# Check if standalone build exists
+if [ ! -d ".next/standalone" ]; then
+    echo -e "${RED}❌ Error: .next/standalone directory not found!${NC}"
+    echo -e "${YELLOW}Make sure next.config.ts has 'output: standalone' configured.${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Step 2: Copying static files...${NC}"
+
+# Copy .next/static to standalone/.next/static
+if [ -d ".next/static" ]; then
+    mkdir -p .next/standalone/.next/static
+    cp -r .next/static/* .next/standalone/.next/static/
+    echo -e "${GREEN}✓ Copied .next/static files${NC}"
+else
+    echo -e "${YELLOW}⚠ Warning: .next/static directory not found${NC}"
+fi
+
+# Copy public folder to standalone/public
+if [ -d "public" ]; then
+    cp -r public .next/standalone/
+    echo -e "${GREEN}✓ Copied public folder${NC}"
+else
+    echo -e "${YELLOW}⚠ Warning: public directory not found${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}✓ All files copied successfully${NC}"
+echo ""
+
+# Ask if user wants to restart PM2
+read -p "Do you want to restart PM2? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Step 3: Restarting PM2...${NC}"
+    
+    # Check if PM2 process exists
+    if pm2 list | grep -q "clienthunt-frontend"; then
+        echo "Stopping existing process..."
+        pm2 delete clienthunt-frontend 2>/dev/null || true
+    fi
+    
+    # Start from standalone directory
+    cd .next/standalone
+    PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env
+    pm2 save
+    
+    echo -e "${GREEN}✓ PM2 restarted successfully${NC}"
+    echo ""
+    echo -e "${GREEN}Frontend is now running on port 9100${NC}"
+    echo ""
+    echo "Useful commands:"
+    echo "  - View logs: pm2 logs clienthunt-frontend"
+    echo "  - Check status: pm2 status"
+    echo "  - Monitor: pm2 monit"
+else
+    echo ""
+    echo -e "${YELLOW}To start manually, run:${NC}"
+    echo "  cd .next/standalone"
+    echo "  PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env"
+    echo "  pm2 save"
+fi
+
+echo ""
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}Build & Deploy Complete!${NC}"
+echo -e "${GREEN}========================================${NC}"
+
