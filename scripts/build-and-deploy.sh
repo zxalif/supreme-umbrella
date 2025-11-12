@@ -46,15 +46,36 @@ echo -e "${YELLOW}Step 2: Copying static files...${NC}"
 if [ -d ".next/static" ]; then
     mkdir -p .next/standalone/.next/static
     cp -r .next/static/* .next/standalone/.next/static/
-    echo -e "${GREEN}✓ Copied .next/static files${NC}"
+    echo -e "${GREEN}✓ Copied .next/static files (includes optimized images)${NC}"
 else
     echo -e "${YELLOW}⚠ Warning: .next/static directory not found${NC}"
 fi
 
-# Copy public folder to standalone/public
+# Copy public folder to standalone/public (includes all images)
 if [ -d "public" ]; then
+    # Count images before copying
+    IMAGE_COUNT=$(find public -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" -o -iname "*.webp" -o -iname "*.ico" \) | wc -l | tr -d ' ')
+    
+    if [ "$IMAGE_COUNT" -gt 0 ]; then
+        echo -e "${YELLOW}  Found ${IMAGE_COUNT} image file(s) in public folder${NC}"
+    fi
+    
+    # Copy public folder recursively (preserves structure and permissions)
     cp -r public .next/standalone/
-    echo -e "${GREEN}✓ Copied public folder${NC}"
+    
+    if [ "$IMAGE_COUNT" -gt 0 ]; then
+        echo -e "${GREEN}✓ Copied public folder (${IMAGE_COUNT} image files included)${NC}"
+    else
+        echo -e "${GREEN}✓ Copied public folder${NC}"
+    fi
+    
+    # Verify images were copied
+    if [ -d ".next/standalone/public/images" ]; then
+        COPIED_IMAGES=$(find .next/standalone/public/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" -o -iname "*.webp" \) 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$COPIED_IMAGES" -gt 0 ]; then
+            echo -e "${GREEN}  ✓ Verified: ${COPIED_IMAGES} image(s) in public/images directory${NC}"
+        fi
+    fi
 else
     echo -e "${YELLOW}⚠ Warning: public directory not found${NC}"
 fi
