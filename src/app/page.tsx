@@ -1,4 +1,4 @@
-import { OrganizationSchema, SoftwareApplicationSchema } from '@/components/seo/StructuredData';
+import { OrganizationSchema, SoftwareApplicationSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 import { Navbar } from '@/components/landing/Navbar';
 import { Hero } from '@/components/landing/Hero';
 import { Statistics } from '@/components/landing/Statistics';
@@ -25,11 +25,18 @@ import { Footer } from '@/components/landing/Footer';
  * - Light theme design
  */
 export default function HomePage() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  
   return (
     <>
       {/* Structured Data for SEO */}
       <OrganizationSchema />
       <SoftwareApplicationSchema />
+      <BreadcrumbSchema 
+        items={[
+          { name: 'Home', url: baseUrl },
+        ]} 
+      />
       
       {/* Navigation */}
       <Navbar />

@@ -48,16 +48,19 @@ export default function CookiePolicyPage() {
                   These cookies cannot be disabled as they are essential for the Service to work.
                 </p>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">2.2 Analytics Cookies</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">2.2 Analytics Cookies (Required)</h3>
                 <p className="text-gray-700 mb-4">
-                  We use analytics cookies to understand how visitors interact with our Service. This helps us improve functionality and user experience. We use:
+                  <strong>Analytics cookies are required to use ClientHunt.</strong> We use analytics cookies to understand how visitors interact with our Service, which is essential for maintaining and improving our service quality. We use:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
-                  <li><strong>Google Analytics:</strong> To track website usage, page views, and user behavior</li>
-                  <li><strong>Web Vitals:</strong> To measure performance metrics (Core Web Vitals)</li>
+                  <li><strong>Google Analytics:</strong> To track website usage, page views, and user behavior. This is required for service functionality and quality assurance.</li>
+                  <li><strong>Web Vitals:</strong> To measure performance metrics (Core Web Vitals) and ensure optimal service delivery.</li>
                 </ul>
+                <p className="text-gray-700 mb-4">
+                  <strong>Important:</strong> Analytics cookies are necessary for the Service to function properly. By using ClientHunt, you consent to the use of these analytics cookies. If you do not accept analytics cookies, you will not be able to use our Service.
+                </p>
                 <p className="text-gray-700">
-                  You can opt out of Google Analytics by installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Analytics Opt-out Browser Add-on</a>.
+                  <strong>Note:</strong> While Google provides an opt-out browser add-on, using it may prevent you from accessing ClientHunt, as analytics cookies are required for service functionality.
                 </p>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">2.3 Functional Cookies</h3>
@@ -98,7 +101,31 @@ export default function CookiePolicyPage() {
               </section>
 
               <section className="mb-8">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. How Long Do Cookies Last?</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Managing Cookies</h2>
+                <p className="text-gray-700 mb-4">
+                  <strong>Cookies are required to use ClientHunt.</strong> By using our Service, you must accept our use of cookies. You can control cookies through your browser settings, but please note that:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+                  <li><strong>Blocking cookies will prevent you from using the Service</strong> - Cookies are essential for authentication, session management, and service functionality</li>
+                  <li>Analytics cookies are required for service quality assurance and improvement</li>
+                  <li>Disabling cookies will result in the Service being unavailable to you</li>
+                  <li>You must accept cookies during registration to create an account</li>
+                </ul>
+                <p className="text-gray-700 mb-4">
+                  <strong>Important:</strong> If you do not accept cookies, you will not be able to access or use ClientHunt. Cookies are a fundamental requirement for the Service to function.
+                </p>
+                <p className="text-gray-700 mb-6">
+                  By registering for or using ClientHunt, you explicitly consent to our use of cookies as described in this policy.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">4.1 Browser Settings</h3>
+                <p className="text-gray-700 mb-4">
+                  Most browsers allow you to control cookies through their settings. However, blocking cookies will prevent you from using ClientHunt.
+                </p>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. How Long Do Cookies Last?</h2>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">4.1 Session Cookies</h3>
                 <p className="text-gray-700 mb-4">
@@ -133,22 +160,37 @@ export default function CookiePolicyPage() {
                   <strong>Note:</strong> Blocking essential cookies may affect the functionality of the Service.
                 </p>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.2 Browser-Specific Instructions</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">4.2 Browser-Specific Instructions</h3>
+                <p className="text-gray-700 mb-4">
+                  While you can control cookies through your browser settings, please note that blocking cookies will prevent you from using ClientHunt:
+                </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
                   <li><strong>Chrome:</strong> Settings → Privacy and security → Cookies and other site data</li>
                   <li><strong>Firefox:</strong> Options → Privacy & Security → Cookies and Site Data</li>
                   <li><strong>Safari:</strong> Preferences → Privacy → Cookies and website data</li>
                   <li><strong>Edge:</strong> Settings → Privacy, search, and services → Cookies and site permissions</li>
                 </ul>
+                <p className="text-gray-700">
+                  <strong>Reminder:</strong> Blocking cookies will prevent you from accessing ClientHunt, as cookies are required for service functionality.
+                </p>
+              </section>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.3 Opt-Out Tools</h3>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. How Long Do Cookies Last?</h2>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.1 Session Cookies</h3>
                 <p className="text-gray-700 mb-4">
-                  You can opt out of certain tracking:
+                  These cookies are temporary and are deleted when you close your browser. They are used to maintain your session while using the Service.
+                </p>
+
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.2 Persistent Cookies</h3>
+                <p className="text-gray-700 mb-4">
+                  These cookies remain on your device for a set period or until you delete them. They include:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
-                  <li><a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Analytics Opt-out</a></li>
-                  <li><a href="http://www.youronlinechoices.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Your Online Choices</a> (EU)</li>
-                  <li><a href="http://optout.networkadvertising.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Network Advertising Initiative</a> (US)</li>
+                  <li>Authentication tokens (typically 30 days)</li>
+                  <li>User preferences (up to 1 year)</li>
+                  <li>Analytics data (up to 2 years)</li>
                 </ul>
               </section>
 
@@ -170,7 +212,7 @@ export default function CookiePolicyPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Do Not Track Signals</h2>
                 <p className="text-gray-700 mb-4">
-                  Some browsers include a "Do Not Track" (DNT) feature. Currently, there is no industry standard for responding to DNT signals. We do not currently respond to DNT browser signals, but we respect your cookie preferences as described above.
+                  Some browsers include a "Do Not Track" (DNT) feature. Currently, there is no industry standard for responding to DNT signals. We do not currently respond to DNT browser signals, as cookies are required for the Service to function properly.
                 </p>
               </section>
 

@@ -134,6 +134,16 @@ export default function RegisterPage() {
         consent_cookies: formData.consentCookies,
       });
       
+      // Auto-accept cookies in localStorage since user already consented during registration
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cookie-consent', 'accepted');
+        localStorage.setItem('cookie-consent-timestamp', new Date().toISOString());
+        // Trigger event to load Google Analytics immediately
+        window.dispatchEvent(new CustomEvent('cookieConsentChanged', { 
+          detail: { consent: 'accepted' } 
+        }));
+      }
+      
       // Track successful registration (signup tracking is done in authStore)
       track.trialStart(); // Track trial start on registration
       setSuccess(true);

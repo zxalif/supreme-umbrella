@@ -13,10 +13,8 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
-  is_active: boolean;
-  is_verified: boolean;
   subscription?: Subscription;
-  created_at: string;
-  updated_at: string;
+  // Note: is_active, is_verified, created_at, updated_at are excluded
+  // as they are not used by the frontend and are handled server-side
 }
 

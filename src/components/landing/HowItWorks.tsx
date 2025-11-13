@@ -1,4 +1,5 @@
 import { UserPlus, Search, Rocket } from 'lucide-react';
+import { HowToSchema } from '@/components/seo/StructuredData';
 
 /**
  * How It Works Section Component
@@ -29,6 +30,17 @@ export function HowItWorks() {
 
   return (
     <section id="how-it-works" className="py-12 lg:py-16 bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/20">
+      {/* HowTo Schema for SEO */}
+      <HowToSchema
+        name="How to Get Started with ClientHunt"
+        description="Learn how to find freelance opportunities on Reddit using ClientHunt in 3 simple steps"
+        steps={steps.map(step => ({
+          name: step.title,
+          text: step.description,
+        }))}
+        totalTime="PT5M"
+      />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">

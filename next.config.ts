@@ -28,6 +28,34 @@ const nextConfig: NextConfig = {
   
   // Headers for caching and SEO
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    // CSP for Next.js - allows Next.js to work while maintaining security
+    // In dev mode, we need 'unsafe-eval' for HMR (Hot Module Replacement)
+    // In production, we can be stricter
+    const cspDirectives = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com", // unsafe-eval needed for Next.js HMR in dev
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for styled-jsx
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app",
+      "frame-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'self'",
+      "upgrade-insecure-requests",
+    ];
+    
+    // In production, remove unsafe-eval for better security
+    if (!isDev) {
+      const productionCsp = cspDirectives.map(directive => 
+        directive.replace(" 'unsafe-eval'", "")
+      );
+      cspDirectives.splice(0, cspDirectives.length, ...productionCsp);
+    }
+    
     return [
       {
         source: '/:path*',
@@ -47,6 +75,24 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives.join('; ')
+          },
+        ],
+      },
+      // JavaScript files - ensure correct MIME type
+      {
+        source: '/_next/static/:path*.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

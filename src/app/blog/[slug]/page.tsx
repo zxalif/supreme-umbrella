@@ -5,6 +5,7 @@ import { Footer } from '@/components/landing/Footer';
 import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ShareButtons } from './ShareButtons';
+import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 
 // SECURITY: Use DOMPurify to sanitize HTML and prevent XSS
 // Lazy load DOMPurify to avoid build-time issues with jsdom
@@ -373,6 +374,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = blogPosts[slug];
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
 
   if (!post) {
     return {
@@ -383,6 +385,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      publishedTime: post.date,
+      authors: [post.author],
+      section: post.category,
+      url: `${baseUrl}/blog/${slug}`,
+      images: [
+        {
+          url: `${baseUrl}/og-image.jpg`,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [`${baseUrl}/og-image.jpg`],
+    },
+    alternates: {
+      canonical: `${baseUrl}/blog/${slug}`,
+    },
   };
 }
 
@@ -402,8 +430,29 @@ export default async function BlogPostPage({ params }: Props) {
     ALLOW_DATA_ATTR: false,
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const postUrl = `${baseUrl}/blog/${slug}`;
+
   return (
     <>
+      {/* Structured Data for SEO */}
+      <ArticleSchema
+        title={post.title}
+        description={post.excerpt}
+        author={post.author}
+        datePublished={post.date}
+        dateModified={post.date}
+        url={postUrl}
+        category={post.category}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: baseUrl },
+          { name: 'Blog', url: `${baseUrl}/blog` },
+          { name: post.title, url: postUrl },
+        ]}
+      />
+      
       <Navbar />
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

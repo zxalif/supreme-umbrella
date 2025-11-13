@@ -2,6 +2,7 @@
 
 import { Star, Quote } from 'lucide-react';
 import { useState } from 'react';
+import { ReviewSchema } from '@/components/seo/StructuredData';
 
 /**
  * Testimonials Section Component
@@ -205,6 +206,30 @@ export function Testimonials() {
           ))}
         </div>
       </div>
+
+      {/* Review Schema for SEO */}
+      <ReviewSchema
+        itemReviewed={{
+          name: 'ClientHunt',
+          type: 'SoftwareApplication',
+        }}
+        reviews={testimonials.map((testimonial) => ({
+          author: testimonial.name,
+          datePublished: new Date().toISOString().split('T')[0], // Use current date as fallback
+          reviewBody: testimonial.quote,
+          reviewRating: {
+            ratingValue: testimonial.rating,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }))}
+        aggregateRating={{
+          ratingValue: 5,
+          reviewCount: testimonials.length,
+          bestRating: 5,
+          worstRating: 1,
+        }}
+      />
     </section>
   );
 }

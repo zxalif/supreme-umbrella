@@ -39,6 +39,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
   const isSubscriptionPage = pathname?.startsWith('/dashboard/subscription');
 
+  // Auto-accept cookies for authenticated users (they already consented during registration)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      const consent = localStorage.getItem('cookie-consent');
+      if (consent !== 'accepted') {
+        // User is logged in but hasn't accepted cookies - auto-accept since they consented during registration
+        localStorage.setItem('cookie-consent', 'accepted');
+        localStorage.setItem('cookie-consent-timestamp', new Date().toISOString());
+        window.dispatchEvent(new CustomEvent('cookieConsentChanged', { 
+          detail: { consent: 'accepted' } 
+        }));
+      }
+    }
+  }, [user]);
+
   // All hooks must be called unconditionally at the top
   useEffect(() => {
     // Check authentication on mount

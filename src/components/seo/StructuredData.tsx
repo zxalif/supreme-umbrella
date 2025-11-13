@@ -173,3 +173,325 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
   );
 }
 
+interface ArticleSchemaProps {
+  title: string;
+  description: string;
+  author: string;
+  datePublished: string;
+  dateModified?: string;
+  image?: string;
+  url: string;
+  category?: string;
+  publisher?: {
+    name: string;
+    logo: string;
+  };
+}
+
+/**
+ * Article Schema
+ * 
+ * For blog posts and articles - enables rich snippets in search results
+ */
+export function ArticleSchema({
+  title,
+  description,
+  author,
+  datePublished,
+  dateModified,
+  image,
+  url,
+  category,
+  publisher = {
+    name: 'ClientHunt',
+    logo: 'https://clienthunt.app/logo.png',
+  },
+}: ArticleSchemaProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  const fullImage = image?.startsWith('http') ? image : `${baseUrl}${image || '/og-image.jpg'}`;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "description": description,
+    "image": fullImage,
+    "datePublished": datePublished,
+    "dateModified": dateModified || datePublished,
+    "author": {
+      "@type": "Person",
+      "name": author,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": publisher.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": publisher.logo,
+      },
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": fullUrl,
+    },
+    ...(category && { "articleSection": category }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+interface HowToSchemaProps {
+  name: string;
+  description: string;
+  steps: Array<{
+    name: string;
+    text: string;
+    image?: string;
+    url?: string;
+  }>;
+  totalTime?: string;
+  image?: string;
+}
+
+/**
+ * HowTo Schema
+ * 
+ * For step-by-step guides - enables rich snippets with steps in search results
+ */
+export function HowToSchema({
+  name,
+  description,
+  steps,
+  totalTime,
+  image,
+}: HowToSchemaProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const fullImage = image?.startsWith('http') ? image : `${baseUrl}${image || '/og-image.jpg'}`;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": name,
+    "description": description,
+    "image": fullImage,
+    ...(totalTime && { "totalTime": totalTime }),
+    "step": steps.map((step, index) => ({
+      "@type": "HowToStep",
+      "position": index + 1,
+      "name": step.name,
+      "text": step.text,
+      ...(step.image && {
+        "image": step.image.startsWith('http') ? step.image : `${baseUrl}${step.image}`,
+      }),
+      ...(step.url && {
+        "url": step.url.startsWith('http') ? step.url : `${baseUrl}${step.url}`,
+      }),
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+interface ReviewSchemaProps {
+  itemReviewed: {
+    name: string;
+    type?: string;
+  };
+  reviews: Array<{
+    author: string;
+    datePublished: string;
+    reviewBody: string;
+    reviewRating: {
+      ratingValue: number;
+      bestRating?: number;
+      worstRating?: number;
+    };
+  }>;
+  aggregateRating?: {
+    ratingValue: number;
+    reviewCount: number;
+    bestRating?: number;
+    worstRating?: number;
+  };
+}
+
+/**
+ * Review Schema
+ * 
+ * For product/service reviews - enables star ratings in search results
+ */
+export function ReviewSchema({
+  itemReviewed,
+  reviews,
+  aggregateRating,
+}: ReviewSchemaProps) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": itemReviewed.type || "Product",
+    "name": itemReviewed.name,
+    "review": reviews.map(review => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.author,
+      },
+      "datePublished": review.datePublished,
+      "reviewBody": review.reviewBody,
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": review.reviewRating.ratingValue,
+        "bestRating": review.reviewRating.bestRating || 5,
+        "worstRating": review.reviewRating.worstRating || 1,
+      },
+    })),
+    ...(aggregateRating && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": aggregateRating.ratingValue,
+        "reviewCount": aggregateRating.reviewCount,
+        "bestRating": aggregateRating.bestRating || 5,
+        "worstRating": aggregateRating.worstRating || 1,
+      },
+    }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+interface ProductSchemaProps {
+  name: string;
+  description: string;
+  image?: string;
+  brand?: string;
+  offers: Array<{
+    price: string;
+    priceCurrency: string;
+    availability?: string;
+    url?: string;
+    priceValidUntil?: string;
+  }>;
+  aggregateRating?: {
+    ratingValue: number;
+    reviewCount: number;
+  };
+  category?: string;
+}
+
+/**
+ * Product Schema
+ * 
+ * For pricing plans - enables rich snippets with pricing in search results
+ */
+export function ProductSchema({
+  name,
+  description,
+  image,
+  brand = 'ClientHunt',
+  offers,
+  aggregateRating,
+  category,
+}: ProductSchemaProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const fullImage = image?.startsWith('http') ? image : `${baseUrl}${image || '/og-image.jpg'}`;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": name,
+    "description": description,
+    "image": fullImage,
+    "brand": {
+      "@type": "Brand",
+      "name": brand,
+    },
+    ...(category && { "category": category }),
+    "offers": offers.map(offer => ({
+      "@type": "Offer",
+      "price": offer.price,
+      "priceCurrency": offer.priceCurrency,
+      "availability": offer.availability || "https://schema.org/InStock",
+      "url": offer.url || `${baseUrl}/pricing`,
+      ...(offer.priceValidUntil && { "priceValidUntil": offer.priceValidUntil }),
+    })),
+    ...(aggregateRating && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": aggregateRating.ratingValue,
+        "reviewCount": aggregateRating.reviewCount,
+      },
+    }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+interface VideoObjectSchemaProps {
+  name: string;
+  description: string;
+  thumbnailUrl: string;
+  uploadDate: string;
+  duration?: string;
+  contentUrl?: string;
+  embedUrl?: string;
+}
+
+/**
+ * VideoObject Schema
+ * 
+ * For video content - enables video rich snippets in search results
+ */
+export function VideoObjectSchema({
+  name,
+  description,
+  thumbnailUrl,
+  uploadDate,
+  duration,
+  contentUrl,
+  embedUrl,
+}: VideoObjectSchemaProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const fullThumbnail = thumbnailUrl.startsWith('http') ? thumbnailUrl : `${baseUrl}${thumbnailUrl}`;
+  const fullContentUrl = contentUrl?.startsWith('http') ? contentUrl : contentUrl ? `${baseUrl}${contentUrl}` : undefined;
+  const fullEmbedUrl = embedUrl?.startsWith('http') ? embedUrl : embedUrl ? `${baseUrl}${embedUrl}` : undefined;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": name,
+    "description": description,
+    "thumbnailUrl": fullThumbnail,
+    "uploadDate": uploadDate,
+    ...(duration && { "duration": duration }),
+    ...(fullContentUrl && { "contentUrl": fullContentUrl }),
+    ...(fullEmbedUrl && { "embedUrl": fullEmbedUrl }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+

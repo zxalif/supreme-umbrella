@@ -109,6 +109,16 @@ export default function LoginPage() {
       // Fetch user to update auth store
       await fetchUser();
       
+      // Auto-accept cookies since user already consented during registration
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cookie-consent', 'accepted');
+        localStorage.setItem('cookie-consent-timestamp', new Date().toISOString());
+        // Trigger event to load Google Analytics immediately
+        window.dispatchEvent(new CustomEvent('cookieConsentChanged', { 
+          detail: { consent: 'accepted' } 
+        }));
+      }
+      
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {

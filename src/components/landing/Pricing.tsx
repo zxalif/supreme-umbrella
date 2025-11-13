@@ -2,6 +2,7 @@
 
 import { Check, Sparkles, Zap, Crown } from 'lucide-react';
 import Link from 'next/link';
+import { ProductSchema } from '@/components/seo/StructuredData';
 
 /**
  * Pricing Section Component
@@ -201,6 +202,24 @@ export function Pricing() {
           </p>
         </div>
       </div>
+
+      {/* Product Schema for SEO - One schema per plan */}
+      {plans.map((plan, index) => (
+        <ProductSchema
+          key={index}
+          name={`ClientHunt ${plan.name} Plan`}
+          description={plan.description}
+          category="SaaS Subscription"
+          offers={[
+            {
+              price: plan.price.toString(),
+              priceCurrency: 'USD',
+              availability: 'https://schema.org/InStock',
+              url: '/register',
+            },
+          ]}
+        />
+      ))}
     </section>
   );
 }

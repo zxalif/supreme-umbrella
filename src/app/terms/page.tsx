@@ -56,6 +56,7 @@ export default function TermsOfServicePage() {
                   <li>Provide accurate and complete registration information</li>
                   <li>Maintain the security of your account credentials</li>
                   <li>Comply with all applicable laws and regulations</li>
+                  <li><strong>Accept the use of cookies and tracking technologies</strong> - Cookies are required for the Service to function properly. By using ClientHunt, you consent to our use of cookies as described in our <Link href="/cookies" className="text-blue-600 hover:underline">Cookie Policy</Link>.</li>
                 </ul>
               </section>
 

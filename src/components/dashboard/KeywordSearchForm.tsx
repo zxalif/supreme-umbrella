@@ -31,6 +31,8 @@ export function KeywordSearchForm({
     subreddits: search?.subreddits || ['forhire', 'hiring', 'freelance'],
     platforms: search?.platforms || ['reddit'],
     enabled: search?.enabled ?? true,
+    scraping_mode: search?.scraping_mode || 'one_time',
+    scraping_interval: search?.scraping_interval || null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -107,6 +109,16 @@ export function KeywordSearchForm({
     }
     if (formData.subreddits && formData.subreddits.length > MAX_SUBREDDITS_PER_SEARCH) {
       setErrors({ subreddits: `Maximum ${MAX_SUBREDDITS_PER_SEARCH} subreddits allowed per search` });
+      return;
+    }
+    
+    // Validate scraping_mode
+    if (formData.scraping_mode === 'scheduled' && !formData.scraping_interval) {
+      setErrors({ scraping_interval: 'Scraping interval is required for scheduled mode' });
+      return;
+    }
+    if (formData.scraping_interval && !['30m', '1h', '6h', '24h'].includes(formData.scraping_interval)) {
+      setErrors({ scraping_interval: 'Invalid scraping interval. Must be one of: 30m, 1h, 6h, 24h' });
       return;
     }
 
@@ -198,6 +210,72 @@ export function KeywordSearchForm({
           placeholder="Type to search subreddits (e.g., forhire, hiring, freelance)"
           error={errors.subreddits}
         />
+      </div>
+
+      {/* Scraping Mode */}
+      <div>
+        <label className="form-label">Scraping Mode</label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="scraping_mode_one_time"
+              name="scraping_mode"
+              value="one_time"
+              checked={formData.scraping_mode === 'one_time'}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                scraping_mode: 'one_time' as const,
+                scraping_interval: null // Clear interval when switching to one_time
+              })}
+              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+            />
+            <label htmlFor="scraping_mode_one_time" className="text-sm text-gray-700">
+              One-time (manual) - Run when you click "Generate Opportunities"
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="scraping_mode_scheduled"
+              name="scraping_mode"
+              value="scheduled"
+              checked={formData.scraping_mode === 'scheduled'}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                scraping_mode: 'scheduled' as const,
+                scraping_interval: formData.scraping_interval || '1h' // Default to 1h if not set
+              })}
+              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+            />
+            <label htmlFor="scraping_mode_scheduled" className="text-sm text-gray-700">
+              Scheduled - Automatically run at regular intervals
+            </label>
+          </div>
+        </div>
+        {formData.scraping_mode === 'scheduled' && (
+          <div className="mt-3">
+            <label htmlFor="scraping_interval" className="block text-sm font-medium text-gray-700 mb-1">
+              Scraping Interval
+            </label>
+            <select
+              id="scraping_interval"
+              value={formData.scraping_interval || '1h'}
+              onChange={(e) => setFormData({ ...formData, scraping_interval: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="30m">Every 30 minutes</option>
+              <option value="1h">Every hour</option>
+              <option value="6h">Every 6 hours</option>
+              <option value="24h">Every 24 hours (daily)</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              The search will automatically run at the selected interval to find new opportunities.
+            </p>
+          </div>
+        )}
+        {errors.scraping_mode && <p className="form-error mt-1">{errors.scraping_mode}</p>}
+        {errors.scraping_interval && <p className="form-error mt-1">{errors.scraping_interval}</p>}
       </div>
 
       {/* Enabled */}

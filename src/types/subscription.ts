@@ -45,7 +45,7 @@ export const PRICING_PLANS = {
   free: {
     name: 'Free',
     price: 0,
-    description: '3-month free trial - Full access to validate the platform',
+    description: '1-month free trial - Full access to validate the platform',
     features: [
       'Unlimited keyword searches',
       'Unlimited opportunities per month',
