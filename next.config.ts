@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com", // unsafe-eval needed for Next.js HMR in dev
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for styled-jsx
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net", // unsafe-inline needed for styled-jsx, cdn.jsdelivr.net for intro.js CSS
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app",
