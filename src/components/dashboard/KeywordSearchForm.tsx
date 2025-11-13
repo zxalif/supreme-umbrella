@@ -27,7 +27,7 @@ export function KeywordSearchForm({
   const [formData, setFormData] = useState<KeywordSearchCreate>({
     name: search?.name || '',
     keywords: search?.keywords || [],
-    patterns: search?.patterns || ['looking for', 'need', 'hiring', 'want'],
+    // patterns removed - handled by backend with defaults (internal logic, not exposed)
     subreddits: search?.subreddits || ['forhire', 'hiring', 'freelance'],
     platforms: search?.platforms || ['reddit'],
     enabled: search?.enabled ?? true,

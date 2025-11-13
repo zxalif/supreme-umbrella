@@ -8,7 +8,6 @@ export interface KeywordSearch {
   id: string;
   name: string;
   keywords: string[];
-  patterns: string[];
   subreddits: string[];
   platforms: string[];
   enabled: boolean;
@@ -17,6 +16,7 @@ export interface KeywordSearch {
   created_at: string;
   updated_at: string;
   // Removed: user_id, last_run_at, zola_search_id, deleted_at (not needed/not exposed)
+  // Removed: patterns (internal matching logic, not exposed for security)
 }
 
 export interface KeywordSearchCreate {

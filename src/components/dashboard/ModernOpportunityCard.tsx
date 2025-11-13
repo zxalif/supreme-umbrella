@@ -287,6 +287,9 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       setIsUpdating(true);
       await onUpdate(opportunity.id, opportunity.status, noteText);
       setShowNoteModal(false);
+      // Ensure scroll is restored immediately when closing modal
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
       showToast.success('Note saved successfully');
     } catch (error) {
       showToast.error('Failed to save note');
@@ -294,13 +297,20 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       setIsUpdating(false);
     }
   };
+  
+  const handleCloseNoteModal = () => {
+    setShowNoteModal(false);
+    // Ensure scroll is restored immediately when closing modal
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  };
 
   // Handle note modal behavior (scroll lock and escape key)
   useEffect(() => {
     if (showNoteModal) {
       // Store original overflow style
-      const originalOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
+      const originalOverflow = document.body.style.overflow || '';
+      const originalPaddingRight = document.body.style.paddingRight || '';
       
       // Calculate scrollbar width to prevent layout shift
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -313,7 +323,7 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          setShowNoteModal(false);
+          handleCloseNoteModal();
         }
       };
       
@@ -321,10 +331,14 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       
       return () => {
         document.removeEventListener('keydown', handleEscape);
-        // Restore original styles
-        document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
+        // Always restore scroll - use 'unset' or empty string to ensure it's restored
+        document.body.style.overflow = originalOverflow || '';
+        document.body.style.paddingRight = originalPaddingRight || '';
       };
+    } else {
+      // Ensure scroll is restored when modal is closed (defensive cleanup)
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
   }, [showNoteModal]);
 
@@ -639,17 +653,20 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
             <Copy className="w-4 h-4" />
             <span className="hidden sm:inline">Copy</span>
           </button>
-          <button
-            onClick={() => setShowNoteModal(true)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm min-h-[2.5rem]"
-            title="Add note"
-          >
-            <StickyNote className="w-4 h-4" />
-            <span className="hidden sm:inline">Note</span>
-            {opportunity.notes && (
-              <span className="w-2 h-2 bg-blue-500 rounded-full ml-1"></span>
-            )}
-          </button>
+          {/* Note button temporarily hidden */}
+          {false && (
+            <button
+              onClick={() => setShowNoteModal(true)}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm min-h-[2.5rem]"
+              title="Add note"
+            >
+              <StickyNote className="w-4 h-4" />
+              <span className="hidden sm:inline">Note</span>
+              {opportunity.notes && (
+                <span className="w-2 h-2 bg-blue-500 rounded-full ml-1"></span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -754,14 +771,15 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
             }}
             onClick={(e) => {
               // Close modal when clicking on backdrop (not on modal content)
+              // Check if the click target is the backdrop itself
               if (e.target === e.currentTarget) {
-                setShowNoteModal(false);
+                handleCloseNoteModal();
               }
             }}
-            onKeyDown={(e) => {
-              // Close modal on Escape key (backup to useEffect handler)
-              if (e.key === 'Escape') {
-                setShowNoteModal(false);
+            onMouseDown={(e) => {
+              // Also handle mousedown on backdrop to ensure clicks work
+              if (e.target === e.currentTarget) {
+                // Allow the click to proceed normally
               }
             }}
             role="dialog"
@@ -769,19 +787,20 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
             aria-labelledby="note-modal-title"
           >
             <div 
-              className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-200 scale-100 relative z-10"
+              className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-200 scale-100 relative z-10 max-h-[90vh] overflow-y-auto"
               onClick={(e) => {
                 // Prevent clicks inside modal from closing it
                 e.stopPropagation();
               }}
               onKeyDown={(e) => {
-                // Prevent Escape key from bubbling
+                // Prevent Escape key from bubbling to backdrop
                 if (e.key === 'Escape') {
                   e.stopPropagation();
+                  handleCloseNoteModal();
                 }
               }}
-              onMouseDown={(e) => {
-                // Prevent any mouse events from reaching backdrop
+              onWheel={(e) => {
+                // Prevent wheel events from reaching backdrop
                 e.stopPropagation();
               }}
             >
@@ -792,7 +811,7 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowNoteModal(false);
+                    handleCloseNoteModal();
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
                   aria-label="Close modal"
@@ -812,16 +831,12 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
                     e.stopPropagation();
                     setNoteText(e.target.value);
                   }}
-                  onFocus={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onBlur={(e) => {
-                    e.stopPropagation();
-                  }}
                   onClick={(e) => {
+                    // Ensure textarea is clickable and gets focus
                     e.stopPropagation();
                   }}
                   onMouseDown={(e) => {
+                    // Prevent backdrop from receiving mousedown
                     e.stopPropagation();
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
@@ -835,7 +850,7 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowNoteModal(false);
+                    handleCloseNoteModal();
                   }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   disabled={isUpdating}
