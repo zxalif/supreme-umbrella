@@ -24,8 +24,9 @@ export function Portal({ children, containerId = 'modal-root' }: PortalProps) {
       containerElement.style.left = '0';
       containerElement.style.width = '100%';
       containerElement.style.height = '100%';
-      containerElement.style.pointerEvents = 'none';
+      containerElement.style.pointerEvents = 'auto';
       containerElement.style.zIndex = '9999';
+      containerElement.style.overflow = 'hidden'; // Prevent scrolling in portal container
       document.body.appendChild(containerElement);
     }
 

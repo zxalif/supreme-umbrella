@@ -434,9 +434,17 @@ export async function apiRequest<T = any>(
     }
 
     // Network or other errors
+    // Provide more detailed error message
+    let errorMessage = 'Network error occurred';
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      errorMessage = `Failed to connect to API. Please check if the API server is running at ${API_BASE_URL}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     throw new ApiClientError(
       0,
-      { detail: error instanceof Error ? error.message : 'Network error occurred' }
+      { detail: errorMessage }
     );
   }
 }

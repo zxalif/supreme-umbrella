@@ -254,6 +254,15 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
   const [isExpanded, setIsExpanded] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState(opportunity.notes || '');
+  
+  // Sync noteText only when modal opens (not while typing)
+  useEffect(() => {
+    if (showNoteModal) {
+      // Only sync when modal first opens, not on every opportunity.notes change
+      setNoteText(opportunity.notes || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showNoteModal]); // Only depend on showNoteModal, not opportunity.notes
 
   const handleStatusChange = async (newStatus: OpportunityStatus) => {
     setIsUpdating(true);
@@ -289,7 +298,18 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
   // Handle note modal behavior (scroll lock and escape key)
   useEffect(() => {
     if (showNoteModal) {
+      // Store original overflow style
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      
+      // Calculate scrollbar width to prevent layout shift
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      
+      // Lock body scroll
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -301,10 +321,10 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       
       return () => {
         document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = 'unset';
+        // Restore original styles
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
       };
-    } else {
-      document.body.style.overflow = 'unset';
     }
   }, [showNoteModal]);
 
@@ -721,25 +741,62 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       {showNoteModal && (
         <Portal>
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{ 
+              zIndex: 9999,
+              pointerEvents: 'auto',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              overflow: 'hidden'
+            }}
             onClick={(e) => {
+              // Close modal when clicking on backdrop (not on modal content)
               if (e.target === e.currentTarget) {
                 setShowNoteModal(false);
               }
             }}
+            onKeyDown={(e) => {
+              // Close modal on Escape key (backup to useEffect handler)
+              if (e.key === 'Escape') {
+                setShowNoteModal(false);
+              }
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="note-modal-title"
           >
             <div 
-              className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-200 scale-100"
-              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-200 scale-100 relative z-10"
+              onClick={(e) => {
+                // Prevent clicks inside modal from closing it
+                e.stopPropagation();
+              }}
+              onKeyDown={(e) => {
+                // Prevent Escape key from bubbling
+                if (e.key === 'Escape') {
+                  e.stopPropagation();
+                }
+              }}
+              onMouseDown={(e) => {
+                // Prevent any mouse events from reaching backdrop
+                e.stopPropagation();
+              }}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 id="note-modal-title" className="text-lg font-semibold text-gray-900">
                   {opportunity.notes ? 'Edit Note' : 'Add Note'}
                 </h3>
                 <button
-                  onClick={() => setShowNoteModal(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowNoteModal(false);
+                  }}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
                   aria-label="Close modal"
+                  type="button"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -751,7 +808,22 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
                 </label>
                 <textarea
                   value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setNoteText(e.target.value);
+                  }}
+                  onFocus={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onBlur={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   rows={4}
                   placeholder="Add your notes about this opportunity..."
@@ -761,16 +833,24 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
               
               <div className="flex items-center justify-end gap-3">
                 <button
-                  onClick={() => setShowNoteModal(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowNoteModal(false);
+                  }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   disabled={isUpdating}
+                  type="button"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleSaveNote}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveNote();
+                  }}
                   disabled={isUpdating}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  type="button"
                 >
                   {isUpdating ? (
                     <>

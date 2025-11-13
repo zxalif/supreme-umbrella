@@ -45,14 +45,14 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'self'",
-      "upgrade-insecure-requests",
     ];
     
-    // In production, remove unsafe-eval for better security
+    // In production, remove unsafe-eval and add upgrade-insecure-requests
     if (!isDev) {
       const productionCsp = cspDirectives.map(directive => 
         directive.replace(" 'unsafe-eval'", "")
       );
+      productionCsp.push("upgrade-insecure-requests");
       cspDirectives.splice(0, cspDirectives.length, ...productionCsp);
     }
     

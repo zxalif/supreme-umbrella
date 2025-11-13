@@ -28,6 +28,7 @@ import {
   listOpportunities,
   updateOpportunity,
   generateOpportunities,
+  startGenerateOpportunities,
   exportOpportunitiesCSV,
   getActiveJobForSearch,
   getGenerationJobStatus,
@@ -145,16 +146,19 @@ export default function OpportunitiesPage() {
 
   // Poll job status if there's an active job
   useEffect(() => {
-    if (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) {
+    if (activeJob && activeJob.job_id && (activeJob.status === 'pending' || activeJob.status === 'processing')) {
+      console.log('[Frontend] Starting polling for job:', activeJob.job_id, 'status:', activeJob.status);
       startPolling(activeJob.job_id);
     } else {
+      console.log('[Frontend] Stopping polling - no active job or job completed');
       stopPolling();
     }
     
     return () => {
       stopPolling();
     };
-  }, [activeJob]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeJob?.job_id, activeJob?.status]);
 
   const loadKeywordSearches = async () => {
     try {
@@ -272,10 +276,38 @@ export default function OpportunitiesPage() {
   const startPolling = (jobId: string) => {
     stopPolling(); // Clear any existing polling
     
-    const interval = setInterval(async () => {
+    let pollCount = 0;
+    let lastProgress = 0;
+    let lastStatus: string | null = null;
+    
+    // Adaptive polling: start with 5 seconds, increase to 10 seconds if progress is slow
+    const getPollInterval = () => {
+      // First few polls: every 5 seconds
+      if (pollCount < 3) return 5000;
+      // If progress hasn't changed much, poll less frequently
+      if (pollCount > 10 && lastProgress < 50) return 10000;
+      // Default: 5 seconds
+      return 5000;
+    };
+    
+    const poll = async () => {
       try {
         const status = await getGenerationJobStatus(jobId);
-        setActiveJob(status);
+        pollCount++;
+        
+        // Only update state if something actually changed to prevent unnecessary re-renders
+        const hasChanged = 
+          !activeJob ||
+          activeJob.status !== status.status ||
+          activeJob.progress !== status.progress ||
+          activeJob.message !== status.message ||
+          activeJob.job_id !== status.job_id;
+        
+        if (hasChanged) {
+          lastProgress = status.progress;
+          lastStatus = status.status;
+          setActiveJob(status);
+        }
         
         // Check job message for cooldown info (even while processing)
         if (status.message && status.message.toLowerCase().includes('cooldown')) {
@@ -300,12 +332,80 @@ export default function OpportunitiesPage() {
           localStorage.removeItem('activeJobStartTime');
           
           if (status.status === 'completed' && status.result) {
-            // Refresh opportunities to show new ones
-            await loadOpportunities();
+            // Refresh opportunities to show new ones (without showing loading spinner)
+            // Use a silent refresh to prevent screen shake
+            try {
+              const filters: OpportunityFilters = {
+                limit: 100,
+              };
+              
+              if (selectedKeywordSearch !== 'all') {
+                filters.keyword_search_id = selectedKeywordSearch;
+              }
+              if (selectedStatus !== 'all') {
+                filters.status = selectedStatus;
+              }
+              if (selectedSource !== 'all') {
+                filters.source = selectedSource;
+              }
+              if (searchQuery.trim()) {
+                filters.search = searchQuery.trim();
+              }
+              if (minScore) {
+                filters.min_score = parseFloat(minScore);
+              }
+              if (minRelevance) {
+                filters.min_relevance = parseFloat(minRelevance);
+              }
+              filters.sort_by = sortBy;
+              filters.sort_order = sortOrder;
+
+              const response = await listOpportunities(filters);
+              let data = response.items;
+              
+              // Apply client-side filtering and sorting
+              if (searchQuery.trim() && !filters.search) {
+                const query = searchQuery.toLowerCase();
+                data = data.filter(opp => 
+                  opp.title?.toLowerCase().includes(query) ||
+                  opp.content.toLowerCase().includes(query) ||
+                  opp.matched_keywords.some(k => k.toLowerCase().includes(query))
+                );
+              }
+              
+              data.sort((a, b) => {
+                let comparison = 0;
+                if (sortBy === 'score') {
+                  comparison = a.total_score - b.total_score;
+                } else if (sortBy === 'relevance') {
+                  comparison = a.relevance_score - b.relevance_score;
+                } else if (sortBy === 'date') {
+                  comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                } else if (sortBy === 'urgency') {
+                  comparison = a.urgency_score - b.urgency_score;
+                }
+                return sortOrder === 'asc' ? comparison : -comparison;
+              });
+              
+              setOpportunities(data);
+            } catch (refreshErr) {
+              console.error('Failed to refresh opportunities:', refreshErr);
+              // Don't show error toast - just log it
+            }
+            
+            // Show success message
+            if (status.result.opportunities_created > 0) {
+              setGeneratedCount(status.result.opportunities_created);
+              setShowSuccessMessage(true);
+              showToast.success(`Generated ${status.result.opportunities_created} new opportunities`);
+            } else {
+              showToast.info('No new opportunities found');
+            }
             
             // Check for cooldown message in result (highest priority)
             if (status.result.cooldown_message) {
               setCooldownMessage(status.result.cooldown_message);
+              showToast.info(status.result.cooldown_message);
             } else if (status.message && status.message.toLowerCase().includes('cooldown')) {
               // Fallback to job message
               const cooldownMatch = status.message.match(/Wait ([\d.]+) more (minute|minutes)/i);
@@ -317,6 +417,8 @@ export default function OpportunitiesPage() {
             } else {
               setCooldownMessage(null);
             }
+            
+            setIsGenerating(false);
           } else if (status.status === 'failed') {
             const errorMsg = status.error || 'Opportunity generation failed';
             
@@ -336,20 +438,31 @@ export default function OpportunitiesPage() {
             }
           }
           setActiveJob(null);
+        } else {
+          // Job still in progress - schedule next poll with adaptive interval
+          const nextInterval = getPollInterval();
+          const timeoutId = setTimeout(poll, nextInterval);
+          setPollingInterval(timeoutId as any); // Store timeout ID
         }
       } catch (err) {
         console.error('Failed to poll job status:', err);
         stopPolling();
         setActiveJob(null);
       }
-    }, 3000); // Poll every 3 seconds
+    };
     
-    setPollingInterval(interval);
+    // Start first poll immediately, then use adaptive intervals
+    poll();
   };
 
   const stopPolling = () => {
     if (pollingInterval) {
-      clearInterval(pollingInterval);
+      // Handle both setInterval and setTimeout
+      if (typeof pollingInterval === 'number') {
+        clearTimeout(pollingInterval);
+      } else {
+        clearInterval(pollingInterval);
+      }
       setPollingInterval(null);
     }
   };
@@ -360,7 +473,7 @@ export default function OpportunitiesPage() {
       return;
     }
 
-    // Check if there's already an active job
+    // Check if there's already an active job for this search
     if (activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing')) {
       showToast.warning('Generation in Progress', 'Opportunity generation is already in progress for this search');
       return;
@@ -372,41 +485,71 @@ export default function OpportunitiesPage() {
     console.log(`[Frontend] Generating opportunities with force_refresh=${forceRefresh} for search: ${selectedKeywordSearch}`);
     
     try {
-      const result = await generateOpportunities(
+      // Check for any existing active job on the backend first
+      let existingJob: GenerateOpportunitiesJobStatus | null = null;
+      try {
+        existingJob = await getActiveJobForSearch(selectedKeywordSearch);
+        if (existingJob && (existingJob.status === 'pending' || existingJob.status === 'processing')) {
+          // There's already an active job, use it instead of creating a new one
+          console.log('[Frontend] Found existing active job, resuming polling:', existingJob.job_id);
+          
+          // Clean up localStorage from any previous jobs first
+          localStorage.removeItem('activeJobId');
+          localStorage.removeItem('activeJobSearchId');
+          localStorage.removeItem('activeJobStartTime');
+          
+          // Store the existing job info
+          localStorage.setItem('activeJobId', existingJob.job_id);
+          localStorage.setItem('activeJobSearchId', selectedKeywordSearch);
+          localStorage.setItem('activeJobStartTime', Date.now().toString());
+          
+          // Set the active job - this will trigger the useEffect to start polling
+          setActiveJob(existingJob);
+          setIsGenerating(false);
+          return;
+        }
+      } catch (err) {
+        // No active job found, continue to create a new one
+        console.log('[Frontend] No existing active job found, creating new one');
+      }
+      
+      // Clean up any previous job state before starting a new one
+      stopPolling();
+      setActiveJob(null);
+      
+      // Clean up localStorage from any previous jobs
+      localStorage.removeItem('activeJobId');
+      localStorage.removeItem('activeJobSearchId');
+      localStorage.removeItem('activeJobStartTime');
+      
+      // Start the job and get job ID
+      const jobResponse = await startGenerateOpportunities(
         selectedKeywordSearch, 
         100,
-        (progress, message) => {
-          console.log(`Progress: ${progress}% - ${message}`);
-        },
         forceRefresh
       );
       
-      // Note: generateOpportunities is a blocking function that completes before returning,
-      // so we don't need to store job_id. The function handles polling internally.
-      // If we need to track jobs separately, we should use startGenerateOpportunities instead.
+      const jobId = jobResponse.job_id;
       
-      // Check for any other active jobs after completion
-      await checkActiveJob();
+      // Store job info for persistence
+      localStorage.setItem('activeJobId', jobId);
+      localStorage.setItem('activeJobSearchId', selectedKeywordSearch);
+      localStorage.setItem('activeJobStartTime', Date.now().toString());
       
-      // Refresh opportunities
-      await loadOpportunities();
+      // Set initial job status - this will trigger the useEffect to start polling
+      const initialJobStatus: GenerateOpportunitiesJobStatus = {
+        job_id: jobId,
+        status: 'pending',
+        progress: 0,
+        message: jobResponse.message,
+        result: null,
+        error: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       
-      // Show success message
-      if (result.opportunities_created > 0) {
-        setGeneratedCount(result.opportunities_created);
-        setShowSuccessMessage(true);
-        showToast.success(`Generated ${result.opportunities_created} new opportunities`);
-        
-        // Check for cooldown message in result
-        if (result.cooldown_message) {
-          setCooldownMessage(result.cooldown_message);
-          showToast.info(result.cooldown_message);
-        } else {
-          setCooldownMessage(null);
-        }
-      } else {
-        showToast.info('No new opportunities found');
-      }
+      setActiveJob(initialJobStatus);
+      
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         const errorMessage = extractErrorMessage(err.data);
@@ -537,59 +680,6 @@ export default function OpportunitiesPage() {
         </div>
       </div>
 
-      {/* Active Job Progress */}
-      {activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing') && (() => {
-        const startTime = localStorage.getItem('activeJobStartTime');
-        const timeInfo = startTime ? getJobTimeInfo(startTime, activeJob.progress) : null;
-        
-        return (
-          <div className="card bg-blue-50 border-blue-200">
-            <div className="flex items-start">
-              <Loader2 className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5 animate-spin" />
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-semibold text-blue-800">
-                    Generating Opportunities
-                  </h3>
-                  {timeInfo && (
-                    <span className="text-xs text-blue-600">
-                      Started {timeInfo.elapsed.formatted}
-                    </span>
-                  )}
-                </div>
-                
-                <p className="text-sm text-blue-600 mb-1">
-                  {timeInfo ? timeInfo.stage : (activeJob.message || 'Processing...')}
-                </p>
-                
-                {/* Check job message for cooldown info */}
-                {activeJob.message && activeJob.message.toLowerCase().includes('cooldown') && (
-                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
-                    ⏱️ {activeJob.message}
-                  </div>
-                )}
-                
-                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${activeJob.progress}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-blue-500">{activeJob.progress}% complete</p>
-                  {timeInfo && (
-                    <p className="text-xs text-blue-500">
-                      Estimated: {timeInfo.remaining.formatted} remaining
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* Success Message */}
       {showSuccessMessage && (
         <SuccessMessage
@@ -710,6 +800,61 @@ export default function OpportunitiesPage() {
           selectedSearchId={selectedKeywordSearch}
           onSelect={setSelectedKeywordSearch}
         />
+        
+        {/* Active Job Progress - Below keyword search selector */}
+        {activeJob && (activeJob.status === 'pending' || activeJob.status === 'processing') && (() => {
+          const startTime = localStorage.getItem('activeJobStartTime');
+          const timeInfo = startTime ? getJobTimeInfo(startTime, activeJob.progress) : null;
+          
+          return (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <Loader2 className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5 animate-spin" />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-sm font-semibold text-blue-800">
+                        Generating Opportunities
+                      </h3>
+                      {timeInfo && (
+                        <span className="text-xs text-blue-600">
+                          Started {timeInfo.elapsed.formatted}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <p className="text-sm text-blue-600 mb-1">
+                      {timeInfo ? timeInfo.stage : (activeJob.message || 'Processing...')}
+                    </p>
+                    
+                    {/* Check job message for cooldown info */}
+                    {activeJob.message && activeJob.message.toLowerCase().includes('cooldown') && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+                        ⏱️ {activeJob.message}
+                      </div>
+                    )}
+                    
+                    <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${activeJob.progress}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-blue-500">{activeJob.progress}% complete</p>
+                      {timeInfo && (
+                        <p className="text-xs text-blue-500">
+                          Estimated: {timeInfo.remaining.formatted} remaining
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         
         {/* Generate Button Section - Below selector */}
         <div className="mt-6 pt-6 border-t border-gray-200">
