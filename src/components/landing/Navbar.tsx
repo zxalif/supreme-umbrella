@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -21,6 +21,7 @@ export function Navbar() {
   const { isAuthenticated, fetchUser, isLoading } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLandingPage = pathname === '/';
+  const navRef = useRef<HTMLElement>(null);
 
   // Check authentication on mount
   useEffect(() => {
@@ -36,8 +37,32 @@ export function Navbar() {
     }
   }, [fetchUser]);
 
+  // Ensure navbar stays fixed
+  useEffect(() => {
+    if (navRef.current) {
+      const nav = navRef.current;
+      // Force fixed positioning with !important
+      nav.style.setProperty('position', 'fixed', 'important');
+      nav.style.setProperty('top', '0', 'important');
+      nav.style.setProperty('left', '0', 'important');
+      nav.style.setProperty('right', '0', 'important');
+      nav.style.setProperty('z-index', '100', 'important');
+      nav.style.setProperty('width', '100%', 'important');
+    }
+  }, []);
+
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
+    <nav 
+      ref={navRef}
+      className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-200"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

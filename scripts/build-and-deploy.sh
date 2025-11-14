@@ -33,7 +33,16 @@ fi
 echo -e "${GREEN}✓ Dependencies installed successfully${NC}"
 echo ""
 
+# Check if PM2 is running (to determine deployment strategy)
+PM2_RUNNING=false
+if pm2 list | grep -q "clienthunt-frontend"; then
+    PM2_RUNNING=true
+    echo -e "${YELLOW}⚠ PM2 process detected - will use zero-downtime deployment${NC}"
+fi
+
 echo -e "${YELLOW}Step 2: Building Next.js application...${NC}"
+
+# Build the application
 npm run build
 
 if [ $? -ne 0 ]; then
@@ -99,20 +108,37 @@ echo ""
 read -p "Do you want to restart PM2? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Step 4: Restarting PM2...${NC}"
+    echo -e "${YELLOW}Step 4: Deploying to PM2...${NC}"
     
     # Check if PM2 process exists
     if pm2 list | grep -q "clienthunt-frontend"; then
-        echo "Stopping existing process..."
-        pm2 delete clienthunt-frontend 2>/dev/null || true
+        echo -e "${YELLOW}  Existing process detected - using zero-downtime reload...${NC}"
+        
+        # Use PM2 reload for zero-downtime deployment (graceful restart)
+        # This keeps the old process running until the new one is ready
+        cd .next/standalone
+        PORT=9100 HOSTNAME=0.0.0.0 pm2 reload clienthunt-frontend --update-env
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ PM2 reloaded successfully (zero-downtime)${NC}"
+        else
+            echo -e "${YELLOW}  Reload failed, trying stop/start...${NC}"
+            # Fallback to stop/start if reload fails
+            pm2 stop clienthunt-frontend 2>/dev/null || true
+            sleep 1
+            PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env
+            echo -e "${GREEN}✓ PM2 restarted successfully${NC}"
+        fi
+    else
+        echo -e "${YELLOW}  No existing process - starting new instance...${NC}"
+        # Start from standalone directory
+        cd .next/standalone
+        PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env
+        echo -e "${GREEN}✓ PM2 started successfully${NC}"
     fi
     
-    # Start from standalone directory
-    cd .next/standalone
-    PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env
     pm2 save
     
-    echo -e "${GREEN}✓ PM2 restarted successfully${NC}"
     echo ""
     echo -e "${GREEN}Frontend is now running on port 9100${NC}"
     echo ""
@@ -120,12 +146,16 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "  - View logs: pm2 logs clienthunt-frontend"
     echo "  - Check status: pm2 status"
     echo "  - Monitor: pm2 monit"
+    echo "  - Reload (zero-downtime): pm2 reload clienthunt-frontend"
 else
     echo ""
     echo -e "${YELLOW}To start manually, run:${NC}"
     echo "  cd .next/standalone"
     echo "  PORT=9100 HOSTNAME=0.0.0.0 pm2 start server.js --name clienthunt-frontend --update-env"
     echo "  pm2 save"
+    echo ""
+    echo -e "${YELLOW}To reload existing process (zero-downtime):${NC}"
+    echo "  pm2 reload clienthunt-frontend"
 fi
 
 echo ""

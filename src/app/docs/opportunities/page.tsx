@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Filter, Download, Eye } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function OpportunitiesPage() {
   return (
     <div>
+      <DocsBreadcrumbs />
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Managing Opportunities</h1>
       <p className="text-xl text-gray-600 mb-8">
         Learn how to view, filter, and manage opportunities found on Reddit.

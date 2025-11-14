@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle, ArrowRight } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function GettingStartedPage() {
   return (
     <div>
+      <DocsBreadcrumbs />
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Getting Started</h1>
       <p className="text-xl text-gray-600 mb-8">
         Welcome to ClientHunt! This guide will help you set up your account and start finding freelance opportunities on Reddit.

@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, BarChart3, Target, Calendar } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function AnalyticsPage() {
   return (
     <div>
+      <DocsBreadcrumbs />
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Analytics & Insights</h1>
       <p className="text-xl text-gray-600 mb-8">
         Track your lead generation performance and gain insights into your opportunities.

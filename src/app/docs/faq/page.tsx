@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HelpCircle, ArrowRight } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function FAQPage() {
   const faqs = [
@@ -129,6 +130,7 @@ export default function FAQPage() {
 
   return (
     <div>
+      <DocsBreadcrumbs />
       <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center">
         <HelpCircle className="w-10 h-10 text-blue-600 mr-3" />
         Frequently Asked Questions

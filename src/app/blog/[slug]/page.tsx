@@ -6,21 +6,49 @@ import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ShareButtons } from './ShareButtons';
 import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
+import { BreadcrumbsWrapper } from '@/components/navigation/BreadcrumbsWrapper';
+import { getBlogPostBySlug, getRelatedBlogPosts } from '@/lib/blog-data';
 
-// SECURITY: Use DOMPurify to sanitize HTML and prevent XSS
-// Lazy load DOMPurify to avoid build-time issues with jsdom
-async function getDOMPurify() {
-  if (typeof window !== 'undefined') {
-    // Client-side: use regular DOMPurify
-    const DOMPurify = (await import('dompurify')).default;
-    return DOMPurify;
-  } else {
-    // Server-side: use isomorphic-dompurify with dynamic import
-    const createDOMPurify = (await import('isomorphic-dompurify')).default;
-    const { JSDOM } = await import('jsdom');
-    const window = new JSDOM('').window;
-    return createDOMPurify(window);
-  }
+// SECURITY: Simple HTML sanitization for server-side rendering
+// Since blog content is static and controlled, we use a simple regex-based sanitizer
+// This avoids jsdom/parse5 ES module issues in Next.js
+function sanitizeHtml(html: string): string {
+  // Remove script tags and event handlers
+  let sanitized = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:text\/html/gi, '');
+  
+  // Only allow specific safe tags and attributes
+  const allowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote'];
+  const allowedAttrs = ['href', 'class', 'target', 'rel'];
+  
+  // Remove any tags not in allowed list
+  const tagRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+  sanitized = sanitized.replace(tagRegex, (match, tagName) => {
+    if (allowedTags.includes(tagName.toLowerCase())) {
+      // Remove any attributes not in allowed list
+      let cleanMatch = match.replace(/\s+([a-z-]+)\s*=\s*["'][^"']*["']/gi, (attrMatch, attrName) => {
+        if (allowedAttrs.includes(attrName.toLowerCase())) {
+          return attrMatch;
+        }
+        return '';
+      });
+      // Remove any attributes without quotes
+      cleanMatch = cleanMatch.replace(/\s+([a-z-]+)\s*=\s*[^\s>]*/gi, (attrMatch, attrName) => {
+        if (allowedAttrs.includes(attrName.toLowerCase())) {
+          return attrMatch;
+        }
+        return '';
+      });
+      return cleanMatch;
+    }
+    return '';
+  });
+  
+  return sanitized;
 }
 
 // Static blog posts content
@@ -38,7 +66,7 @@ const blogPosts: Record<string, {
     title: 'How to Find Freelance Opportunities on Reddit: A Complete Guide',
     excerpt: 'Learn the best strategies for finding high-quality freelance opportunities on Reddit, including which subreddits to monitor and how to stand out.',
     author: 'ClientHunt Team',
-    date: '2024-11-15',
+    date: '2025-11-15',
     readTime: '8 min read',
     category: 'Guides',
     content: `
@@ -90,7 +118,7 @@ Reddit is a goldmine for freelance opportunities, but it requires time and strat
     title: '10 Reddit Lead Generation Tips Every Freelancer Should Know',
     excerpt: 'Discover proven strategies for generating leads on Reddit, from crafting the perfect response to building your reputation in relevant communities.',
     author: 'ClientHunt Team',
-    date: '2024-11-10',
+    date: '2025-11-10',
     readTime: '6 min read',
     category: 'Tips',
     content: `
@@ -147,7 +175,7 @@ Reddit lead generation is about being proactive, authentic, and strategic. With 
     title: 'The Best Subreddits for Freelancers in 2025',
     excerpt: 'A comprehensive list of the most active and valuable subreddits for finding freelance work across different industries and skill sets.',
     author: 'ClientHunt Team',
-    date: '2024-11-05',
+    date: '2025-11-05',
     readTime: '5 min read',
     category: 'Resources',
     content: `
@@ -305,6 +333,61 @@ function markdownToHtml(markdown: string): string {
 }
 
 /**
+ * Add contextual internal links to content
+ * Links relevant keywords to internal pages
+ */
+function addContextualLinks(text: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  
+  // Internal link mappings (keyword -> URL)
+  const internalLinks: Record<string, string> = {
+    'ClientHunt': '/',
+    'ClientHunt.app': '/',
+    'keyword search': '/docs/keyword-searches',
+    'keyword searches': '/docs/keyword-searches',
+    'getting started': '/docs/getting-started',
+    'opportunities': '/docs/opportunities',
+    'analytics': '/docs/analytics',
+    'pricing': '/pricing',
+    'blog': '/blog',
+    'documentation': '/docs',
+    'docs': '/docs',
+  };
+
+  // Add internal links for keywords (case-insensitive, whole word only)
+  let processedText = text;
+  for (const [keyword, url] of Object.entries(internalLinks)) {
+    // Create regex to match whole words only (case-insensitive)
+    const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    
+    // Only add link if keyword is not already inside an <a> tag
+    processedText = processedText.replace(regex, (match, offset, string) => {
+      // Check if we're inside an existing link tag
+      const beforeMatch = string.substring(Math.max(0, offset - 200), offset);
+      const afterMatch = string.substring(offset, Math.min(string.length, offset + match.length + 200));
+      
+      // Simple check: if there's an unclosed <a> tag before, don't link
+      const openTags = (beforeMatch.match(/<a\b[^>]*>/gi) || []).length;
+      const closeTags = (beforeMatch.match(/<\/a>/gi) || []).length;
+      
+      if (openTags > closeTags) {
+        // We're inside an existing link, don't modify
+        return match;
+      }
+      
+      // Check if this exact match was already linked
+      if (beforeMatch.includes(`href="${url}"`) || beforeMatch.includes(`href='${url}'`)) {
+        return match;
+      }
+      
+      return `<a href="${url}" class="text-blue-600 hover:text-blue-700 underline font-medium">${match}</a>`;
+    });
+  }
+
+  return processedText;
+}
+
+/**
  * Process inline markdown (bold, italic, links)
  * SECURITY: Link URLs are validated to prevent javascript: and data: URLs
  */
@@ -325,6 +408,9 @@ function processInlineMarkdown(text: string): string {
     }
     return `<a href="${sanitizedUrl}" class="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
   });
+
+  // Add contextual internal links
+  text = addContextualLinks(text);
 
   return text;
 }
@@ -422,13 +508,12 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
-  // Get DOMPurify instance (lazy loaded)
-  const DOMPurify = await getDOMPurify();
-  const sanitizedContent = DOMPurify.sanitize(markdownToHtml(post.content), {
-    ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
-    ALLOW_DATA_ATTR: false,
-  });
+  // Get related posts using the smart algorithm
+  const relatedPosts = getRelatedBlogPosts(slug, 3);
+
+  // Convert markdown to HTML and sanitize
+  const htmlContent = markdownToHtml(post.content);
+  const sanitizedContent = sanitizeHtml(htmlContent);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
   const postUrl = `${baseUrl}/blog/${slug}`;
@@ -456,14 +541,14 @@ export default async function BlogPostPage({ params }: Props) {
       <Navbar />
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Back Button */}
-          <Link
-            href="/blog"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Blog
-          </Link>
+          {/* Breadcrumbs */}
+          <BreadcrumbsWrapper
+            items={[
+              { name: 'Home', url: baseUrl },
+              { name: 'Blog', url: `${baseUrl}/blog` },
+              { name: post.title, url: postUrl },
+            ]}
+          />
 
           {/* Article Header */}
           <article className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
@@ -510,27 +595,36 @@ export default async function BlogPostPage({ params }: Props) {
           </article>
 
           {/* Related Posts */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Related Posts</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(blogPosts)
-                .filter(([postSlug]) => postSlug !== slug)
-                .slice(0, 2)
-                .map(([postSlug, relatedPost]) => (
-                  <Link
-                    key={postSlug}
-                    href={`/blog/${postSlug}`}
-                    className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all"
-                  >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
-                      {relatedPost.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3">{relatedPost.excerpt}</p>
-                    <span className="text-blue-600 text-sm font-medium">Read more →</span>
-                  </Link>
-                ))}
+          {relatedPosts.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Related Posts</h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                {relatedPosts.map((relatedPost) => {
+                  const relatedPostData = blogPosts[relatedPost.slug];
+                  if (!relatedPostData) return null;
+                  
+                  return (
+                    <Link
+                      key={relatedPost.slug}
+                      href={`/blog/${relatedPost.slug}`}
+                      className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                          {relatedPost.category}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                        {relatedPost.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{relatedPost.excerpt}</p>
+                      <span className="text-blue-600 text-sm font-medium">Read more →</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       <Footer />

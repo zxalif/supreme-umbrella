@@ -300,7 +300,7 @@ function performSearch(query: string): Array<{
       excerpt: 'Learn the best strategies for finding high-quality freelance opportunities on Reddit, including which subreddits to monitor and how to stand out.',
       content: 'Reddit has become one of the best platforms for freelancers to find clients. With millions of active users and hundreds of job-related subreddits, there\'s no shortage of opportunities—if you know where to look. Reddit offers several advantages for freelancers: Direct client contact, Diverse opportunities, Active communities, Transparent communication. Best subreddits include r/forhire, r/hiring, r/freelance, r/DesignJobs, r/HireAWriter, r/Jobs4Bitcoins, r/remotejs. How to stand out: Respond quickly, Be specific, Show personality, Follow up. Using ClientHunt to automate your search.',
       category: 'Guides',
-      date: '2024-11-15',
+      date: '2025-11-15',
       keywords: ['reddit', 'freelance', 'opportunities', 'subreddits', 'forhire', 'hiring', 'guide', 'find clients', 'lead generation', 'automation'],
     },
     {
@@ -309,7 +309,7 @@ function performSearch(query: string): Array<{
       excerpt: 'Discover proven strategies for generating leads on Reddit, from crafting the perfect response to building your reputation in relevant communities.',
       content: 'Generating leads on Reddit requires a different approach than traditional job boards. Monitor multiple subreddits, set up keyword alerts, respond within the first hour, personalize every response, build your Reddit reputation, include portfolio links, be transparent about pricing, follow up strategically, track your success, use automation wisely. Tools like ClientHunt can save you hours, but always personalize your responses.',
       category: 'Tips',
-      date: '2024-11-10',
+      date: '2025-11-10',
       keywords: ['lead generation', 'tips', 'reddit', 'freelance', 'strategies', 'reputation', 'portfolio', 'pricing', 'automation', 'clienthunt'],
     },
     {
@@ -318,7 +318,7 @@ function performSearch(query: string): Array<{
       excerpt: 'A comprehensive list of the most active and valuable subreddits for finding freelance work across different industries and skill sets.',
       content: 'Here\'s a curated list of the most valuable subreddits for freelancers. General Freelance: r/forhire, r/hiring, r/freelance. Design: r/DesignJobs, r/logodesign, r/PhotoshopRequest. Writing & Content: r/HireAWriter, r/writing, r/content_marketing. Development: r/forhire, r/remotejs, r/Jobs4Bitcoins. Marketing: r/marketing, r/socialmedia, r/PPC. Tips for success: Join multiple subreddits, set up keyword monitoring, engage with the community, read the rules, use ClientHunt to monitor all these subreddits automatically.',
       category: 'Resources',
-      date: '2024-11-05',
+      date: '2025-11-05',
       keywords: ['subreddits', 'freelance', 'reddit', 'forhire', 'design', 'writing', 'development', 'marketing', 'jobs', 'opportunities', 'resources'],
     },
   ];

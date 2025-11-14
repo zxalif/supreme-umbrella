@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Lightbulb, AlertCircle } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function KeywordSearchesPage() {
   return (
     <div>
+      <DocsBreadcrumbs />
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Keyword Searches</h1>
       <p className="text-xl text-gray-600 mb-8">
         Learn how to create and manage keyword searches to find opportunities matching your skills.

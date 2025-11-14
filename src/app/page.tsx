@@ -42,8 +42,8 @@ export default function HomePage() {
       {/* Navigation */}
       <Navbar />
       
-      {/* Main Content */}
-      <main>
+      {/* Main Content - Add padding-top to account for fixed navbar */}
+      <main className="pt-16">
         <Hero />
         <Statistics />
         <KeywordStats />

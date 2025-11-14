@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Book, Zap, Search, Target, Bell, BarChart, HelpCircle, ArrowRight } from 'lucide-react';
+import { DocsBreadcrumbs } from '@/components/navigation/DocsBreadcrumbs';
 
 export default function DocsOverviewPage() {
   const sections = [
@@ -59,6 +60,9 @@ export default function DocsOverviewPage() {
 
   return (
     <div>
+      {/* Breadcrumbs */}
+      <DocsBreadcrumbs />
+      
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">

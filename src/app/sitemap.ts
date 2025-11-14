@@ -14,15 +14,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const blogPosts = [
     {
       slug: 'how-to-find-freelance-opportunities-on-reddit',
-      date: '2024-11-15',
+      date: '2025-11-15',
     },
     {
       slug: 'reddit-lead-generation-tips',
-      date: '2024-11-10',
+      date: '2025-11-10',
     },
     {
       slug: 'best-subreddits-for-freelancers',
-      date: '2024-11-05',
+      date: '2025-11-05',
+    },
+    {
+      slug: 'how-to-find-clients-on-reddit',
+      date: '2025-11-20',
+    },
+    {
+      slug: 'reddit-vs-upwork-vs-fiverr',
+      date: '2025-11-25',
+    },
+    {
+      slug: 'how-to-write-perfect-reddit-job-response',
+      date: '2025-11-30',
     },
   ]
   

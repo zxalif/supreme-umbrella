@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
             <p className="text-sm text-gray-500 mb-8">
-              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Last updated: November 14, 2025
             </p>
 
             <div className="prose prose-gray max-w-none">
@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data Sharing and Disclosure</h2>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">5.1 We Do Not Sell Your Data</h3>
+                <h3 id="do-not-sell" className="text-xl font-semibold text-gray-900 mb-3 scroll-mt-20">5.1 We Do Not Sell Your Data</h3>
                 <p className="text-gray-700 mb-4">
                   <strong>We do not sell, rent, or trade your personal information to third parties.</strong> Your data is used solely to provide and improve our service.
                 </p>

@@ -120,7 +120,6 @@ export const metadata: Metadata = {
   
   // Other metadata
   other: {
-    'dns-prefetch': 'https://api.clienthunt.app',
     // Search engine verification tags
     'google-site-verification': 'gRyj9XjrccfiMhzCXflJsWapY0e-qD8u5R6a9NWyKG0', // Google Search Console verification
     'msvalidate.01': '05DA541C6D203C4512E299A2FD7EECC0', // Bing Webmaster Tools verification
@@ -148,6 +147,7 @@ export default function RootLayout({
             queryInput: "required name=search_term_string",
           }}
         />
+        {/* HeadLinks adds critical resource hints (preconnect, preload) for Core Web Vitals optimization */}
         <HeadLinks />
         <GoogleAnalytics />
         <PaddleProvider>
