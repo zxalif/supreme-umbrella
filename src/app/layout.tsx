@@ -76,8 +76,10 @@ export const metadata: Metadata = {
     images: [
       {
         url: `${baseUrl}/og-image.jpg`, // Absolute URL required for Facebook
-        width: 1200,
-        height: 630,
+        // Note: Recommended size is 1200×630px (1.91:1 aspect ratio) for optimal display
+        // Current image is 1536×1024px - will work but may be cropped on some platforms
+        width: 1536, // Actual image width
+        height: 1024, // Actual image height
         alt: 'ClientHunt - AI-Powered Reddit Lead Generation Platform for Freelancers',
         type: 'image/jpeg',
       },

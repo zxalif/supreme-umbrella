@@ -60,6 +60,13 @@ export default function SubscriptionPage() {
       return;
     }
 
+    // Check if Paddle is disabled (check BEFORE attempting payment)
+    if (!paddleEnabled) {
+      setError('Payment processing is currently unavailable. Please contact support@clienthunt.app for assistance.');
+      showToast.error('Payment Unavailable', 'Payment processing is temporarily disabled. Please contact support for assistance.');
+      return;
+    }
+
     // Check if Paddle.js is ready
     if (!paddleReady) {
       setError('Payment system is loading. Please wait a moment and try again.');
@@ -114,7 +121,15 @@ export default function SubscriptionPage() {
     } catch (err: any) {
       if (err instanceof ApiClientError) {
         // Extract user-friendly error message
-        const errorMessage = extractErrorMessage(err.data, 'Failed to create checkout session');
+        let errorMessage = extractErrorMessage(err.data, 'Failed to create checkout session');
+        
+        // Transform technical error messages to user-friendly ones
+        if (errorMessage.includes('Paddle payment gateway is disabled')) {
+          errorMessage = 'Payment processing is currently unavailable. Please contact support@clienthunt.app for assistance.';
+        } else if (errorMessage.includes('PADDLE_ENABLED') || errorMessage.includes('PADDLE_API_KEY')) {
+          // Hide technical details from users
+          errorMessage = 'Payment processing is temporarily unavailable. Please contact support@clienthunt.app for assistance.';
+        }
         
         // Add additional context for specific error codes
         let displayMessage = errorMessage;
@@ -125,14 +140,20 @@ export default function SubscriptionPage() {
         
         if (errorCode === 'transaction_default_checkout_url_not_set') {
           displayMessage = `${errorMessage}\n\nPlease configure the default checkout URL in your Paddle dashboard under Checkout Settings.`;
+        } else if (errorCode === 'paddle_disabled') {
+          displayMessage = 'Payment processing is currently unavailable. Please contact support@clienthunt.app for assistance.';
         }
         
         setError(displayMessage);
-        showToast.error('Checkout Error', displayMessage);
+        showToast.error('Payment Unavailable', displayMessage);
       } else {
         const errorMsg = err.message || 'An unexpected error occurred. Please try again or contact support.';
-        setError(errorMsg);
-        showToast.error('Checkout Error', errorMsg);
+        // Hide technical messages
+        const userFriendlyMsg = errorMsg.includes('Paddle') && errorMsg.includes('disabled')
+          ? 'Payment processing is currently unavailable. Please contact support@clienthunt.app for assistance.'
+          : errorMsg;
+        setError(userFriendlyMsg);
+        showToast.error('Payment Error', userFriendlyMsg);
       }
       setIsProcessing(null);
     }
