@@ -24,6 +24,13 @@ export default function robots(): MetadataRoute.Robots {
           '/api/', 
           '/admin/', 
           '/settings/',
+          '/search', // Search results page (not indexable)
+          '/login',
+          '/register',
+          '/forgot-password',
+          '/reset-password',
+          '/verify-email',
+          '/checkout', // Private transaction page
         ],
       },
     ],

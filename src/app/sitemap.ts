@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { getAllBlogPosts } from '@/lib/blog-data'
 
 /**
  * Sitemap for SEO
@@ -10,33 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app'
   const now = new Date()
   
-  // Blog posts (static for now, can be made dynamic later)
-  const blogPosts = [
-    {
-      slug: 'how-to-find-freelance-opportunities-on-reddit',
-      date: '2025-11-15',
-    },
-    {
-      slug: 'reddit-lead-generation-tips',
-      date: '2025-11-10',
-    },
-    {
-      slug: 'best-subreddits-for-freelancers',
-      date: '2025-11-05',
-    },
-    {
-      slug: 'how-to-find-clients-on-reddit',
-      date: '2025-11-20',
-    },
-    {
-      slug: 'reddit-vs-upwork-vs-fiverr',
-      date: '2025-11-25',
-    },
-    {
-      slug: 'how-to-write-perfect-reddit-job-response',
-      date: '2025-11-30',
-    },
-  ]
+  // Get blog posts dynamically from blog-data.ts
+  const blogPosts = getAllBlogPosts().map(post => ({
+    slug: post.slug,
+    date: post.date,
+  }))
   
   return [
     // Homepage - Highest priority
@@ -76,6 +55,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/docs/getting-started`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/docs/keyword-searches`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/docs/opportunities`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
@@ -142,19 +133,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.5,
     },
-    // Auth pages - Lower priority
-    {
-      url: `${baseUrl}/login`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/register`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    // Note: Auth pages (/login, /register) and search page (/search) are excluded
+    // as they are not valuable for SEO indexing
   ]
 }
 
