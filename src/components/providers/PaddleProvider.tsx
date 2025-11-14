@@ -77,9 +77,12 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
   const vendorId = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID || ''; // Kept for backward compatibility check only
   const environment = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
   
-  // Debug: Log environment variables (only first few chars for security)
+  // Check if we're in development mode (never log sensitive data in production)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Debug: Log environment variables (ONLY in development, and only first few chars for security)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isDevelopment) {
       console.log('🔍 Paddle Environment Check:');
       console.log('  - NEXT_PUBLIC_PADDLE_ENABLED:', paddleEnabled);
       console.log('  - NEXT_PUBLIC_PADDLE_CLIENT_TOKEN:', clientToken ? `${clientToken.substring(0, 12)}... (${clientToken.length} chars)` : 'NOT SET');
@@ -89,7 +92,7 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
         console.warn('⚠️ Paddle is DISABLED via NEXT_PUBLIC_PADDLE_ENABLED=false');
       }
     }
-  }, [paddleEnabled]);
+  }, [paddleEnabled, isDevelopment]);
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -102,13 +105,15 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
       return;
     }
 
-    // Log authentication method for debugging
-    if (clientToken) {
-      console.log(`🔑 Paddle Client Token loaded: ${clientToken.substring(0, 12)}...`);
-    } else if (vendorId) {
-      console.log(`🔑 Paddle Vendor ID loaded: ${vendorId.substring(0, 8)}... (using fallback method)`);
-    } else {
-      console.warn('⚠️ Paddle authentication not found. Please set NEXT_PUBLIC_PADDLE_CLIENT_TOKEN or NEXT_PUBLIC_PADDLE_VENDOR_ID in your .env file');
+    // Log authentication method for debugging (ONLY in development)
+    if (isDevelopment) {
+      if (clientToken) {
+        console.log(`🔑 Paddle Client Token loaded: ${clientToken.substring(0, 12)}...`);
+      } else if (vendorId) {
+        console.log(`🔑 Paddle Vendor ID loaded: ${vendorId.substring(0, 8)}... (using fallback method)`);
+      } else {
+        console.warn('⚠️ Paddle authentication not found. Please set NEXT_PUBLIC_PADDLE_CLIENT_TOKEN or NEXT_PUBLIC_PADDLE_VENDOR_ID in your .env file');
+      }
     }
 
     // Initialize Paddle once the script is loaded
@@ -138,12 +143,14 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
             // Paddle.Initialize() should ONLY take { token: 'your_client_side_token' }
             // The environment is set separately using Paddle.Environment.set()
             
-            // Debug: Log raw values before processing
-            console.log('🔍 Debug - Raw values:');
-            console.log('  - clientToken (raw):', clientToken ? `"${clientToken}" (length: ${clientToken.length})` : 'EMPTY');
-            console.log('  - vendorId (raw):', vendorId ? `"${vendorId}" (length: ${vendorId.length})` : 'EMPTY');
-            console.log('  - trimmedToken:', trimmedToken ? `"${trimmedToken}" (length: ${trimmedToken.length})` : 'EMPTY');
-            console.log('  - trimmedVendorId:', trimmedVendorId ? `"${trimmedVendorId}" (length: ${trimmedVendorId.length})` : 'EMPTY');
+            // Debug: Log raw values before processing (ONLY in development, NEVER log full tokens)
+            if (isDevelopment) {
+              console.log('🔍 Debug - Raw values (development only):');
+              console.log('  - clientToken (raw):', clientToken ? `"${clientToken.substring(0, 12)}..." (length: ${clientToken.length})` : 'EMPTY');
+              console.log('  - vendorId (raw):', vendorId ? `"${vendorId.substring(0, 8)}..." (length: ${vendorId.length})` : 'EMPTY');
+              console.log('  - trimmedToken:', trimmedToken ? `"${trimmedToken.substring(0, 12)}..." (length: ${trimmedToken.length})` : 'EMPTY');
+              console.log('  - trimmedVendorId:', trimmedVendorId ? `"${trimmedVendorId.substring(0, 8)}..." (length: ${trimmedVendorId.length})` : 'EMPTY');
+            }
             
             // Build initialization config - ONLY token, no environment parameter
             // Reference: https://developer.paddle.com/paddlejs/include-paddlejs
@@ -187,9 +194,11 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
               // Reference: https://developer.paddle.com/paddlejs/include-paddlejs
               initConfig.token = trimmedToken;
               authMethod = 'client-side token';
-              console.log(`🚀 Initializing Paddle.js with client-side token:`);
-              console.log(`   - Token: ${trimmedToken.substring(0, 12)}... (${trimmedToken.length} chars)`);
-              console.log(`   - Token starts with: ${trimmedToken.substring(0, 5)} (should be 'test_' for sandbox or 'live_' for production)`);
+              if (isDevelopment) {
+                console.log(`🚀 Initializing Paddle.js with client-side token:`);
+                console.log(`   - Token: ${trimmedToken.substring(0, 12)}... (${trimmedToken.length} chars)`);
+                console.log(`   - Token starts with: ${trimmedToken.substring(0, 5)} (should be 'test_' for sandbox or 'live_' for production)`);
+              }
             } else if (trimmedVendorId) {
               // Check if vendor ID is actually an API key
               if (trimmedVendorId.startsWith('apikey_')) {
@@ -231,11 +240,13 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
             
             // Initialize Paddle.js with ONLY the token
             // Reference: https://developer.paddle.com/paddlejs/include-paddlejs
-            console.log('📞 Calling Paddle.Initialize() with config:', {
-              hasToken: !!initConfig.token,
-              tokenPreview: initConfig.token ? `${initConfig.token.substring(0, 12)}...` : undefined,
-              tokenLength: initConfig.token?.length
-            });
+            if (isDevelopment) {
+              console.log('📞 Calling Paddle.Initialize() with config:', {
+                hasToken: !!initConfig.token,
+                tokenPreview: initConfig.token ? `${initConfig.token.substring(0, 12)}...` : undefined,
+                tokenLength: initConfig.token?.length
+              });
+            }
             
             // Set up eventCallback to handle checkout events
             // This allows us to mark transactions as billed when ready to lock quantity
@@ -250,8 +261,8 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
               eventCallback: async (eventData: any) => {
                 const eventName = eventData?.name || eventData?.event || (typeof eventData === 'string' ? eventData : null);
                 
-                // Log important events for debugging
-                if (eventName && (eventName.includes('checkout') || eventName.includes('transaction'))) {
+                // Log important events for debugging (ONLY in development)
+                if (isDevelopment && eventName && (eventName.includes('checkout') || eventName.includes('transaction'))) {
                   console.log('[Paddle Global Event]', eventName, eventData);
                 }
                 
@@ -263,7 +274,9 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
                   const transactionId = eventData?.data?.transaction_id;
                   
                   if (transactionId) {
-                    console.log('[Paddle] Checkout loaded - immediately marking transaction as billed to lock quantity:', transactionId);
+                    if (isDevelopment) {
+                      console.log('[Paddle] Checkout loaded - immediately marking transaction as billed to lock quantity:', transactionId);
+                    }
                     
                     // Mark transaction as billed via API IMMEDIATELY
                     // This prevents race condition where user changes quantity before transaction becomes ready
@@ -274,19 +287,25 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
                       // Call immediately - backend will handle polling until ready
                       markTransactionBilled(transactionId)
                         .then((result) => {
-                          console.log('[Paddle] ✅ Transaction marked as billed - quantity is now locked', result);
+                          if (isDevelopment) {
+                            console.log('[Paddle] ✅ Transaction marked as billed - quantity is now locked', result);
+                          }
                         })
                         .catch((error: any) => {
                           // Backend will retry if transaction not ready yet
                           const errorMessage = error?.data?.detail || error?.message || '';
-                          if (errorMessage.includes('ready status') || errorMessage.includes('draft')) {
-                            console.log('[Paddle] Transaction not ready yet, backend will poll until ready...');
-                          } else {
-                            console.warn('[Paddle] ⚠️ Could not mark transaction as billed:', error);
+                          if (isDevelopment) {
+                            if (errorMessage.includes('ready status') || errorMessage.includes('draft')) {
+                              console.log('[Paddle] Transaction not ready yet, backend will poll until ready...');
+                            } else {
+                              console.warn('[Paddle] ⚠️ Could not mark transaction as billed:', error);
+                            }
                           }
                         });
                     } catch (error) {
-                      console.warn('[Paddle] ⚠️ Failed to import markTransactionBilled:', error);
+                      if (isDevelopment) {
+                        console.warn('[Paddle] ⚠️ Failed to import markTransactionBilled:', error);
+                      }
                     }
                   }
                 }
@@ -299,9 +318,11 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
             // Reference: https://developer.paddle.com/paddlejs/overview
             // The environment should be set using Paddle.Environment.set() as a separate call
             if (window.Paddle?.Environment && typeof window.Paddle.Environment.set === 'function') {
-              console.log(`🌍 Setting Paddle environment to: ${environment}`);
+              if (isDevelopment) {
+                console.log(`🌍 Setting Paddle environment to: ${environment}`);
+              }
               window.Paddle.Environment.set(environment);
-            } else {
+            } else if (isDevelopment) {
               console.warn('⚠️ Paddle.Environment.set is not available - environment may be auto-detected from token');
             }
             
@@ -316,9 +337,13 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
           setTimeout(() => {
             if (typeof window !== 'undefined' && window.Paddle?.Checkout) {
               setPaddleInitialized(true);
-              console.log(`✅ Paddle.js initialized in ${environment} environment using client-side token`);
+              if (isDevelopment) {
+                console.log(`✅ Paddle.js initialized in ${environment} environment using client-side token`);
+              }
             } else {
-              console.warn('Paddle.js loaded but Checkout is not yet available');
+              if (isDevelopment) {
+                console.warn('Paddle.js loaded but Checkout is not yet available');
+              }
               // Try to set initialized anyway - it might become available later
               setPaddleInitialized(true);
             }
@@ -340,12 +365,16 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
   // Don't load Paddle.js if explicitly disabled or client token is not set
   // According to latest docs, only client-side tokens are supported
   if (!paddleEnabled) {
-    console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_ENABLED=false');
+    if (isDevelopment) {
+      console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_ENABLED=false');
+    }
     return <>{children}</>;
   }
   
   if (!clientToken) {
-    console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not set');
+    if (isDevelopment) {
+      console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not set');
+    }
     return <>{children}</>;
   }
 
@@ -360,7 +389,9 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
           strategy="afterInteractive"
           onLoad={() => {
             setPaddleLoaded(true);
-            console.log('✅ Paddle.js script loaded');
+            if (isDevelopment) {
+              console.log('✅ Paddle.js script loaded');
+            }
           }}
           onError={(e) => {
             console.error('Failed to load Paddle.js script:', e);
