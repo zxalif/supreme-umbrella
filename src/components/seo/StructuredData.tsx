@@ -106,9 +106,23 @@ export function OrganizationSchema({
 interface SoftwareApplicationSchemaProps {
   name?: string;
   applicationCategory?: string;
+  applicationSubCategory?: string;
+  operatingSystem?: string;
+  url?: string;
+  description?: string;
+  screenshot?: string;
+  featureList?: string[];
+  softwareVersion?: string;
   offers?: {
     price: string;
     priceCurrency: string;
+    availability?: string;
+    url?: string;
+    priceValidUntil?: string;
+    priceSpecification?: {
+      priceType?: string;
+      billingDuration?: string;
+    };
   }[];
   aggregateRating?: {
     ratingValue: string;
@@ -120,26 +134,126 @@ interface SoftwareApplicationSchemaProps {
  * SoftwareApplication Schema
  * 
  * Tells search engines about your SaaS application
+ * Required fields: name, applicationCategory, offers
+ * Recommended: operatingSystem, url, description, screenshot, provider
  */
 export function SoftwareApplicationSchema({
   name = 'ClientHunt',
   applicationCategory = 'BusinessApplication',
+  applicationSubCategory = 'LeadGenerationSoftware',
+  operatingSystem = 'Web',
+  url = 'https://clienthunt.app',
+  description = 'AI-powered lead generation platform that helps freelancers find opportunities on Reddit automatically',
+  screenshot = 'https://clienthunt.app/og-image.jpg',
+  featureList = [
+    'AI-powered opportunity scoring',
+    'Reddit monitoring and alerts',
+    'Keyword-based search',
+    'Email notifications',
+    'Analytics dashboard',
+    'CSV/PDF export',
+  ],
+  softwareVersion = '1.0',
   offers = [
-    { price: '19', priceCurrency: 'USD' },
-    { price: '39', priceCurrency: 'USD' },
-    { price: '79', priceCurrency: 'USD' },
+    // Monthly plans
+    { 
+      price: '19', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1M', // 1 month
+      },
+    },
+    { 
+      price: '39', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1M', // 1 month
+      },
+    },
+    { 
+      price: '79', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1M', // 1 month
+      },
+    },
+    // Yearly plans (2 months free)
+    { 
+      price: '190', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1Y', // 1 year
+      },
+    },
+    { 
+      price: '390', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1Y', // 1 year
+      },
+    },
+    { 
+      price: '790', 
+      priceCurrency: 'USD', 
+      availability: 'https://schema.org/InStock', 
+      url: 'https://clienthunt.app/pricing',
+      priceSpecification: {
+        priceType: 'https://schema.org/Subscription',
+        billingDuration: 'P1Y', // 1 year
+      },
+    },
   ],
   aggregateRating,
 }: SoftwareApplicationSchemaProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  const fullScreenshot = screenshot?.startsWith('http') ? screenshot : `${baseUrl}${screenshot || '/og-image.jpg'}`;
+  
   const schema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": name,
     "applicationCategory": applicationCategory,
+    ...(applicationSubCategory && { "applicationSubCategory": applicationSubCategory }),
+    "operatingSystem": operatingSystem,
+    "url": url,
+    "description": description,
+    "screenshot": fullScreenshot,
+    ...(featureList && featureList.length > 0 && { "featureList": featureList }),
+    ...(softwareVersion && { "softwareVersion": softwareVersion }),
+    "provider": {
+      "@type": "Organization",
+      "name": "ClientHunt",
+      "url": baseUrl,
+    },
     "offers": offers.map(offer => ({
       "@type": "Offer",
       "price": offer.price,
       "priceCurrency": offer.priceCurrency,
+      "availability": offer.availability || "https://schema.org/InStock",
+      ...(offer.url && { "url": offer.url }),
+      ...(offer.priceValidUntil && { "priceValidUntil": offer.priceValidUntil }),
+      ...(offer.priceSpecification && {
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "priceType": offer.priceSpecification.priceType || "https://schema.org/Subscription",
+          "billingDuration": offer.priceSpecification.billingDuration,
+        },
+      }),
     })),
     ...(aggregateRating && {
       "aggregateRating": {

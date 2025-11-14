@@ -14,7 +14,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard/', '/api/', '/admin/', '/_next/', '/settings/'],
+        // Block private routes only
+        // Note: We do NOT block /_next/ because:
+        // 1. Google needs static assets (CSS, JS, fonts) to render pages
+        // 2. Next.js static assets are hashed and don't expose sensitive info
+        // 3. Internal routes are already protected by authentication
+        disallow: [
+          '/dashboard/', 
+          '/api/', 
+          '/admin/', 
+          '/settings/',
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

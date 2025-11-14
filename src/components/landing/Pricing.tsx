@@ -203,23 +203,34 @@ export function Pricing() {
         </div>
       </div>
 
-      {/* Product Schema for SEO - One schema per plan */}
-      {plans.map((plan, index) => (
-        <ProductSchema
-          key={index}
-          name={`ClientHunt ${plan.name} Plan`}
-          description={plan.description}
-          category="SaaS Subscription"
-          offers={[
-            {
-              price: plan.price.toString(),
-              priceCurrency: 'USD',
-              availability: 'https://schema.org/InStock',
-              url: '/register',
-            },
-          ]}
-        />
-      ))}
+      {/* Product Schema for SEO - One schema per plan with monthly and yearly offers */}
+      {plans.map((plan, index) => {
+        // Calculate yearly price (2 months free)
+        const yearlyPrice = plan.price * 10; // 10 months = 2 months free
+        
+        return (
+          <ProductSchema
+            key={index}
+            name={`ClientHunt ${plan.name} Plan`}
+            description={plan.description}
+            category="SaaS Subscription"
+            offers={[
+              {
+                price: plan.price.toString(),
+                priceCurrency: 'USD',
+                availability: 'https://schema.org/InStock',
+                url: 'https://clienthunt.app/pricing',
+              },
+              {
+                price: yearlyPrice.toString(),
+                priceCurrency: 'USD',
+                availability: 'https://schema.org/InStock',
+                url: 'https://clienthunt.app/pricing',
+              },
+            ]}
+          />
+        );
+      })}
     </section>
   );
 }
