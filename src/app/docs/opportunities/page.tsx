@@ -30,6 +30,7 @@ export default function OpportunitiesPage() {
             alt="Opportunities list view"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -55,6 +56,7 @@ export default function OpportunitiesPage() {
             alt="Generate opportunities button and keyword search selector"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -107,6 +109,7 @@ export default function OpportunitiesPage() {
             alt="Filter controls and search bar"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -135,6 +138,7 @@ export default function OpportunitiesPage() {
             alt="Opportunity detail modal"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -183,6 +187,7 @@ export default function OpportunitiesPage() {
             alt="Status update dropdown in opportunity modal"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -252,6 +257,7 @@ export default function OpportunitiesPage() {
             alt="Processing banner with time estimates"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>

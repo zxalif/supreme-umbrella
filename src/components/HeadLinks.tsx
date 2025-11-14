@@ -65,11 +65,14 @@ export function HeadLinks() {
     addMeta('theme-color', '#3B82F6'); // Blue theme color
     
     // Search engine verification tags
-    // Bing Webmaster Tools verification
-    addMeta('msvalidate.01', '05DA541C6D203C4512E299A2FD7EECC0', 'msvalidate.01');
+    // Google Search Console verification
+    addMeta('google-site-verification', 'gRyj9XjrccfiMhzCXflJsWapY0e-qD8u5R6a9NWyKG0');
     
-    // Yandex Webmaster verification
-    addMeta('yandex-verification', 'b62e7fb759963944', 'yandex-verification');
+    // Bing Webmaster Tools verification (uses 'name' attribute, not 'property')
+    addMeta('msvalidate.01', '05DA541C6D203C4512E299A2FD7EECC0');
+    
+    // Yandex Webmaster verification (uses 'name' attribute, not 'property')
+    addMeta('yandex-verification', 'b62e7fb759963944');
   }, []);
 
   return null;

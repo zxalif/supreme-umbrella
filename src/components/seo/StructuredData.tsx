@@ -18,6 +18,57 @@ interface OrganizationSchemaProps {
 }
 
 /**
+ * WebSite Schema
+ * 
+ * Enables sitelinks search box in Google search results
+ * This allows users to search your site directly from Google
+ */
+interface WebSiteSchemaProps {
+  url?: string;
+  name?: string;
+  potentialAction?: {
+    target: string;
+    queryInput: string;
+  };
+}
+
+export function WebSiteSchema({
+  url = 'https://clienthunt.app',
+  name = 'ClientHunt',
+  potentialAction,
+}: WebSiteSchemaProps) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": name,
+    "url": url,
+    "description": "AI-powered lead generation platform that helps freelancers find opportunities on Reddit automatically",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ClientHunt",
+      "url": url,
+    },
+    ...(potentialAction && {
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": potentialAction.target,
+        },
+        "query-input": potentialAction.queryInput,
+      },
+    }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+/**
  * Organization Schema
  * 
  * Tells search engines about your company/organization
@@ -28,8 +79,8 @@ export function OrganizationSchema({
   logo = 'https://clienthunt.app/logo.png',
   description = 'Reddit-first lead generation platform for freelancers',
   socialMedia = {
-    twitter: '#',
-    linkedin: '#',
+    twitter: 'https://twitter.com/clienthuntapp',
+    linkedin: 'https://www.linkedin.com/company/clienthuntapp/',
   },
 }: OrganizationSchemaProps) {
   const schema = {

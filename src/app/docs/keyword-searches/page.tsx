@@ -36,6 +36,7 @@ export default function KeywordSearchesPage() {
             alt="Keyword search creation form with auto-complete"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -149,6 +150,7 @@ export default function KeywordSearchesPage() {
             alt="Auto-complete dropdown showing keyword suggestions"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>

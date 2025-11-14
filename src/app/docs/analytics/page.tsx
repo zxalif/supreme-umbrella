@@ -49,6 +49,7 @@ export default function AnalyticsPage() {
             alt="Analytics dashboard overview"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -108,6 +109,7 @@ export default function AnalyticsPage() {
             alt="Metrics cards and key indicators"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -135,6 +137,7 @@ export default function AnalyticsPage() {
             alt="Charts and graphs showing trends"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>
@@ -164,6 +167,7 @@ export default function AnalyticsPage() {
             alt="Search performance comparison table"
             width={1200}
             height={800}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             className="w-full h-auto"
           />
         </div>

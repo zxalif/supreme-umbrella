@@ -39,6 +39,7 @@ export default function GettingStartedPage() {
               alt="ClientHunt registration page"
               width={1200}
               height={800}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
               className="w-full h-auto"
               priority
             />
@@ -91,6 +92,7 @@ export default function GettingStartedPage() {
               alt="ClientHunt dashboard overview"
               width={1200}
               height={800}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
               className="w-full h-auto"
             />
           </div>
@@ -123,6 +125,7 @@ export default function GettingStartedPage() {
               alt="Create keyword search form"
               width={1200}
               height={800}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
               className="w-full h-auto"
             />
           </div>
@@ -160,6 +163,7 @@ export default function GettingStartedPage() {
               alt="Generate opportunities button and process"
               width={1200}
               height={800}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
               className="w-full h-auto"
             />
           </div>

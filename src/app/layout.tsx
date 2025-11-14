@@ -6,6 +6,7 @@ import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
 import { PaddleProvider } from "@/components/providers/PaddleProvider";
 import { CookieConsent } from "@/components/CookieConsent";
 import { HeadLinks } from "@/components/HeadLinks";
+import { WebSiteSchema } from "@/components/seo/StructuredData";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -92,8 +93,8 @@ export const metadata: Metadata = {
     title: 'ClientHunt - Find Freelance Opportunities on Reddit',
     description: 'AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial, no credit card required.',
     images: [`${baseUrl}/twitter-image.jpg`], // Absolute URL
-    creator: '@clienthunt',
-    site: '@clienthunt',
+    creator: '@clienthuntapp',
+    site: '@clienthuntapp',
   },
   
   // Canonical URL
@@ -121,6 +122,7 @@ export const metadata: Metadata = {
   other: {
     'dns-prefetch': 'https://api.clienthunt.app',
     // Search engine verification tags
+    'google-site-verification': 'gRyj9XjrccfiMhzCXflJsWapY0e-qD8u5R6a9NWyKG0', // Google Search Console verification
     'msvalidate.01': '05DA541C6D203C4512E299A2FD7EECC0', // Bing Webmaster Tools verification
     'yandex-verification': 'b62e7fb759963944', // Yandex Webmaster verification
   },
@@ -134,9 +136,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+  
   return (
     <html lang="en" className={inter.variable}>
       <body className={inter.className}>
+        {/* WebSite Schema for sitelinks search box - appears on all pages */}
+        <WebSiteSchema 
+          potentialAction={{
+            target: `${baseUrl}/search?q={search_term_string}`,
+            queryInput: "required name=search_term_string",
+          }}
+        />
         <HeadLinks />
         <GoogleAnalytics />
         <PaddleProvider>

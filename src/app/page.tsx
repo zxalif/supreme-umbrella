@@ -30,6 +30,7 @@ export default function HomePage() {
   return (
     <>
       {/* Structured Data for SEO */}
+      {/* WebSiteSchema is included in root layout.tsx for all pages */}
       <OrganizationSchema />
       <SoftwareApplicationSchema />
       <BreadcrumbSchema 

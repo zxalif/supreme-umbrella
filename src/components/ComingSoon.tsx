@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Mail, Calendar, Sparkles, ArrowRight } from 'lucide-react';
 
 /**
@@ -125,15 +126,28 @@ export function ComingSoon() {
         <div className="text-center">
           <p className="text-gray-600 mb-4">Follow our journey:</p>
           <div className="flex justify-center gap-4">
-            <a href="#" className="text-gray-400 hover:text-primary-500 transition-colors">
+            <a 
+              href="https://twitter.com/clienthuntapp" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary-500 transition-colors"
+            >
               Twitter
             </a>
-            <a href="#" className="text-gray-400 hover:text-primary-500 transition-colors">
+            <a 
+              href="https://www.linkedin.com/company/clienthuntapp/" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary-500 transition-colors"
+            >
               LinkedIn
             </a>
-            <a href="#" className="text-gray-400 hover:text-primary-500 transition-colors">
+            <Link 
+              href="/blog" 
+              className="text-gray-400 hover:text-primary-500 transition-colors"
+            >
               Blog
-            </a>
+            </Link>
           </div>
         </div>
       </div>

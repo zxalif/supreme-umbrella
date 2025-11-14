@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Twitter, Linkedin, Github, Mail } from 'lucide-react';
+import { useMemo } from 'react';
 
 /**
  * Footer Component
@@ -9,7 +10,8 @@ import { Twitter, Linkedin, Github, Mail } from 'lucide-react';
  * Site footer with links, social media, and copyright
  */
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Use useMemo to ensure consistent year value during hydration
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -29,18 +31,20 @@ export function Footer() {
             {/* Social Links */}
             <div className="flex space-x-4">
               <a
-                href="#"
-                className="text-gray-400 hover:text-white transition-colors cursor-not-allowed"
+                href="https://twitter.com/clienthuntapp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Twitter"
-                onClick={(e) => e.preventDefault()}
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="#"
-                className="text-gray-400 hover:text-white transition-colors cursor-not-allowed"
+                href="https://www.linkedin.com/company/clienthuntapp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
                 aria-label="LinkedIn"
-                onClick={(e) => e.preventDefault()}
               >
                 <Linkedin className="w-5 h-5" />
               </a>
