@@ -22,15 +22,17 @@ const inter = Inter({
  * - Font optimization
  * - Global styles
  */
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app'),
+  metadataBase: new URL(baseUrl),
   
   title: {
-    default: 'ClientHunt - Find Freelance Opportunities on Reddit',
+    default: 'ClientHunt - Find Freelance Opportunities on Reddit Automatically',
     template: '%s | ClientHunt'
   },
   
-  description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial, no credit card.',
+  description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts matching your skills. Free 1-month trial, no credit card required. Start finding clients today!',
   
   keywords: [
     'Reddit lead generation',
@@ -40,7 +42,11 @@ export const metadata: Metadata = {
     'Reddit opportunity finder',
     'find clients on Reddit',
     'automated lead generation',
-    'freelance lead generation tool'
+    'freelance lead generation tool',
+    'Reddit freelance jobs',
+    'find freelance work',
+    'Reddit job finder',
+    'freelance client discovery'
   ],
   
   authors: [{ name: 'ClientHunt' }],
@@ -63,16 +69,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: '/',
+    url: baseUrl,
     siteName: 'ClientHunt',
-    title: 'ClientHunt - Find Freelance Opportunities on Reddit',
-    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial.',
+    title: 'ClientHunt - Find Freelance Opportunities on Reddit Automatically',
+    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts matching your skills. Free 1-month trial, no credit card required.',
     images: [
       {
-        url: '/og-image.jpg', // Create this image (1200x630px)
+        url: `${baseUrl}/og-image.jpg`, // Absolute URL required for Facebook
         width: 1200,
         height: 630,
         alt: 'ClientHunt - AI-Powered Reddit Lead Generation Platform for Freelancers',
+        type: 'image/jpeg',
       },
     ],
   },
@@ -81,30 +88,40 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'ClientHunt - Find Freelance Opportunities on Reddit',
-    description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts. Free trial.',
-    images: ['/twitter-image.jpg'], // Create this image (1200x675px)
+    description: 'AI-powered lead generation monitors Reddit 24/7 for client posts. Free 1-month trial, no credit card required.',
+    images: [`${baseUrl}/twitter-image.jpg`], // Absolute URL
     creator: '@clienthunt',
+    site: '@clienthunt',
   },
   
   // Canonical URL
   alternates: {
-    canonical: '/',
+    canonical: baseUrl,
   },
   
   // Additional metadata
   category: 'Business',
   classification: 'SaaS',
   
-  // Icons and links
+  // Icons and links - Multiple sizes for better compatibility
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
   
   // Other metadata
   other: {
     'dns-prefetch': 'https://api.clienthunt.app',
   },
+  
+  // Manifest for PWA support
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

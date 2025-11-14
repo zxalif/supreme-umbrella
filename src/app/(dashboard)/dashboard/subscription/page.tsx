@@ -32,6 +32,9 @@ export default function SubscriptionPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  
+  // Check if Paddle is disabled
+  const paddleEnabled = process.env.NEXT_PUBLIC_PADDLE_ENABLED !== 'false';
 
   useEffect(() => {
     loadSubscription();
@@ -206,6 +209,23 @@ export default function SubscriptionPage() {
             <div>
               <h3 className="text-sm font-semibold text-green-800 mb-1">Success</h3>
               <p className="text-sm text-green-600">{success}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Paddle Disabled Notice */}
+      {!paddleEnabled && (
+        <div className="card bg-yellow-50 border-yellow-200">
+          <div className="flex items-start">
+            <Info className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-yellow-800 mb-1">Payment Processing Temporarily Unavailable</h3>
+              <p className="text-sm text-yellow-700">
+                Payment processing is currently disabled. Please contact{' '}
+                <a href="mailto:support@clienthunt.app" className="underline font-medium">support@clienthunt.app</a>{' '}
+                for assistance with subscriptions.
+              </p>
             </div>
           </div>
         </div>

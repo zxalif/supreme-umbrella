@@ -72,6 +72,7 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
   // According to latest Paddle.js docs: https://developer.paddle.com/paddlejs/include-paddlejs
   // Only client-side tokens are supported. Vendor ID is no longer supported.
   // Get your client-side token from: Paddle Dashboard > Developer Tools > Authentication > Client-side tokens
+  const paddleEnabled = process.env.NEXT_PUBLIC_PADDLE_ENABLED !== 'false'; // Default to true unless explicitly disabled
   const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '';
   const vendorId = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID || ''; // Kept for backward compatibility check only
   const environment = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
@@ -80,12 +81,15 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       console.log('🔍 Paddle Environment Check:');
+      console.log('  - NEXT_PUBLIC_PADDLE_ENABLED:', paddleEnabled);
       console.log('  - NEXT_PUBLIC_PADDLE_CLIENT_TOKEN:', clientToken ? `${clientToken.substring(0, 12)}... (${clientToken.length} chars)` : 'NOT SET');
       console.log('  - NEXT_PUBLIC_PADDLE_VENDOR_ID:', vendorId ? `${vendorId.substring(0, 8)}... (${vendorId.length} chars)` : 'NOT SET');
       console.log('  - NEXT_PUBLIC_PADDLE_ENVIRONMENT:', environment);
-      console.log('  - All NEXT_PUBLIC_ vars:', Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC_')));
+      if (!paddleEnabled) {
+        console.warn('⚠️ Paddle is DISABLED via NEXT_PUBLIC_PADDLE_ENABLED=false');
+      }
     }
-  }, []);
+  }, [paddleEnabled]);
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -333,8 +337,13 @@ export function PaddleProvider({ children }: PaddleProviderProps) {
     return <>{children}</>;
   }
 
-  // Don't load Paddle.js if client token is not set
+  // Don't load Paddle.js if explicitly disabled or client token is not set
   // According to latest docs, only client-side tokens are supported
+  if (!paddleEnabled) {
+    console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_ENABLED=false');
+    return <>{children}</>;
+  }
+  
   if (!clientToken) {
     console.warn('⚠️ Paddle.js not loaded: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not set');
     return <>{children}</>;

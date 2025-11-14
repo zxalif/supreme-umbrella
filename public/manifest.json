@@ -1,0 +1,23 @@
+{
+  "name": "ClientHunt - Find Freelance Opportunities on Reddit",
+  "short_name": "ClientHunt",
+  "description": "AI-powered lead generation monitors Reddit 24/7 for client posts matching your skills",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+
