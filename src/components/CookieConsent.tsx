@@ -16,6 +16,7 @@ export function CookieConsent() {
 
   useEffect(() => {
     // Check if user has already made a choice
+    // Accept both 'dismissed' (old) and 'rejected' (new) for backward compatibility
     const consent = localStorage.getItem('cookie-consent');
     if (!consent) {
       // Show banner after a short delay for better UX (let page load first)
@@ -23,6 +24,11 @@ export function CookieConsent() {
         setShowBanner(true);
       }, 2000); // Increased delay to let users see the page first
       return () => clearTimeout(timer);
+    }
+    // If user previously dismissed/rejected, treat it as rejected for backward compatibility
+    if (consent === 'dismissed') {
+      // Migrate old 'dismissed' to 'rejected' for consistency
+      localStorage.setItem('cookie-consent', 'rejected');
     }
   }, []);
 
@@ -38,13 +44,18 @@ export function CookieConsent() {
     }));
   };
 
-  const handleDismiss = () => {
-    // Allow users to dismiss without accepting
+  const handleReject = () => {
+    // User explicitly rejects cookies
     // They can still browse, but analytics won't load
     // Cookies will be required when they try to register/login
-    localStorage.setItem('cookie-consent', 'dismissed');
+    localStorage.setItem('cookie-consent', 'rejected');
     localStorage.setItem('cookie-consent-timestamp', new Date().toISOString());
     setShowBanner(false);
+    
+    // Trigger custom event to ensure analytics is not loaded
+    window.dispatchEvent(new CustomEvent('cookieConsentChanged', { 
+      detail: { consent: 'rejected' } 
+    }));
   };
 
   if (!showBanner) {
@@ -78,15 +89,16 @@ export function CookieConsent() {
             
             <div className="flex items-center gap-2 w-full md:w-auto">
               <button
-                onClick={handleDismiss}
+                onClick={handleReject}
                 className="px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap"
-                aria-label="Dismiss cookie banner"
+                aria-label="Reject all cookies"
               >
-                Dismiss
+                Reject All
               </button>
               <button
                 onClick={handleAccept}
                 className="px-4 md:px-6 py-2 text-xs md:text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap"
+                aria-label="Accept all cookies"
               >
                 Accept All
               </button>

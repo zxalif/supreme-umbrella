@@ -321,6 +321,44 @@
     }
   }
 
+  /* Subtle blob animation without aggressive scaling */
+  .animate-blob-subtle {
+    animation: blobSubtle 8s infinite ease-in-out;
+  }
+
+  @keyframes blobSubtle {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.05);
+    }
+    66% {
+      transform: translate(-25px, 25px) scale(0.95);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-blob,
+    .animate-blob-subtle,
+    .animate-fade-in,
+    .animate-fade-in-up,
+    .animate-gradient,
+    .animate-pulse-subtle,
+    .animate-bounce-subtle,
+    .animate-check-in {
+      animation: none !important;
+    }
+    
+    .transition-all {
+      transition: none !important;
+    }
+  }
+
   .animation-delay-2000 {
     animation-delay: 2s;
   }
@@ -385,6 +423,13 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Prevent animation flash on initial load - keep content visible until animation is ready */
+  .animate-fade-in-up:not([data-animated="true"]) {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    animation: none !important;
   }
 
   .delay-1000 {
