@@ -68,11 +68,8 @@ export function HeadLinks() {
     // Bing Webmaster Tools verification
     addMeta('msvalidate.01', '05DA541C6D203C4512E299A2FD7EECC0', 'msvalidate.01');
     
-    // Yandex verification (if set in environment)
-    const yandexVerification = process.env.NEXT_PUBLIC_YANDEX_VERIFICATION;
-    if (yandexVerification) {
-      addMeta('yandex-verification', yandexVerification, 'yandex-verification');
-    }
+    // Yandex Webmaster verification
+    addMeta('yandex-verification', 'b62e7fb759963944', 'yandex-verification');
   }, []);
 
   return null;
