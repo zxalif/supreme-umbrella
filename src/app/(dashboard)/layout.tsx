@@ -9,6 +9,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
  * - Header
  * - Sidebar
  * - Authentication protection
+ * 
+ * All pages including success/cancel pages use DashboardLayout for consistent auth handling
  */
 export default function Layout({
   children,

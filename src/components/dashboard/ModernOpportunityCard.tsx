@@ -625,62 +625,63 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       </p>
 
       {/* Quick Actions Bar */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 mb-4 pb-4 border-b border-gray-200">
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg text-sm min-h-[2.5rem]"
-        >
-          <FileText className="w-4 h-4" />
-          <span className="hidden sm:inline">View Details</span>
-          <span className="sm:hidden">Details</span>
-        </button>
-        <div className="flex gap-2">
+      <div className="mb-4 pb-4 border-b border-gray-200">
+        {/* Mobile: Grid layout for better visibility */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-2">
+          <button
+            onClick={() => setShowModal(true)}
+            className="col-span-2 sm:flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg text-sm min-h-[2.75rem]"
+          >
+            <FileText className="w-4 h-4 flex-shrink-0" />
+            <span>View Details</span>
+          </button>
           <a
             href={opportunity.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg text-sm min-h-[2.5rem]"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg text-sm min-h-[2.75rem]"
             title="Open in new tab"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline">Open</span>
+            <span className="sm:hidden">View</span>
           </a>
           <button
             onClick={handleCopyLink}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm min-h-[2.5rem]"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors text-sm min-h-[2.75rem] shadow-sm"
             title="Copy link"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline">Copy</span>
+            <span className="sm:hidden">Copy</span>
           </button>
-          {/* Note button temporarily hidden */}
-          {false && (
-            <button
-              onClick={() => setShowNoteModal(true)}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm min-h-[2.5rem]"
-              title="Add note"
-            >
-              <StickyNote className="w-4 h-4" />
-              <span className="hidden sm:inline">Note</span>
-              {opportunity.notes && (
-                <span className="w-2 h-2 bg-blue-500 rounded-full ml-1"></span>
-              )}
-            </button>
-          )}
+          {/* Note button */}
+          <button
+            onClick={() => setShowNoteModal(true)}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors text-sm min-h-[2.75rem] shadow-sm relative"
+            title="Add note"
+          >
+            <StickyNote className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Note</span>
+            <span className="sm:hidden">Note</span>
+            {opportunity.notes && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Status and Change */}
-      <div className="flex items-center justify-between">
-        <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.bg} ${statusConfig.text} shadow-md flex items-center gap-2 ${opportunity.status === 'new' ? 'animate-pulse' : ''}`}>
-          <StatusIcon className="w-4 h-4" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <span className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold ${statusConfig.bg} ${statusConfig.text} shadow-md flex items-center justify-center gap-2 ${opportunity.status === 'new' ? 'animate-pulse' : ''}`}>
+          <StatusIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
           {opportunity.status.charAt(0).toUpperCase() + opportunity.status.slice(1)}
         </span>
         <select
           value={opportunity.status}
           onChange={(e) => handleStatusChange(e.target.value as OpportunityStatus)}
           disabled={isUpdating}
-          className="text-sm border-2 border-gray-300 rounded-lg px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 hover:border-gray-400 transition-colors"
+          className="text-sm border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 hover:border-gray-400 transition-colors w-full sm:w-auto"
         >
           <option value="new">New</option>
           <option value="viewed">Viewed</option>

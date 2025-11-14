@@ -94,17 +94,21 @@ export async function addMessageToThread(
 
 /**
  * Get unread notification count
+ * 
+ * DISABLED: Notifications feature is not currently in use.
+ * This function always returns 0 without making any API calls.
  */
 export async function getUnreadNotificationCount(): Promise<number> {
-  try {
-    const data = await apiGet<{ count: number }>('/api/v1/support/notifications/unread-count');
-    return data.count;
-  } catch (error) {
-    // For MVP, if endpoint doesn't exist, return 0
-    if ((error as any)?.response?.status === 404) {
-      return 0;
-    }
-    throw new Error(extractErrorMessage(error, 'Failed to fetch notification count'));
-  }
+  // Notifications are disabled - always return 0 without making API calls
+  return 0;
+}
+
+/**
+ * Set success page active state
+ * 
+ * DEPRECATED: No longer needed since notifications are disabled
+ */
+export function setSuccessPageActive(active: boolean): void {
+  // No-op: Notifications are disabled
 }
 

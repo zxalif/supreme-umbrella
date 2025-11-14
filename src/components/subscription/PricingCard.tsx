@@ -11,6 +11,7 @@ interface PricingCardProps {
   onSelect: (plan: SubscriptionPlan) => void;
   isLoading?: boolean;
   className?: string;
+  billingPeriod?: 'monthly' | 'yearly';
 }
 
 /**
@@ -25,9 +26,15 @@ export function PricingCard({
   onSelect,
   isLoading = false,
   className = '',
+  billingPeriod = 'monthly',
 }: PricingCardProps) {
   const planData = PRICING_PLANS[plan];
   const isCurrentPlan = currentPlan === plan;
+  // Free plan doesn't have yearlyPrice, so handle it safely
+  const displayPrice = billingPeriod === 'yearly' && 'yearlyPrice' in planData && planData.yearlyPrice
+    ? planData.yearlyPrice
+    : planData.price;
+  const priceLabel = billingPeriod === 'yearly' ? '/year' : '/month';
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -102,11 +109,18 @@ export function PricingCard({
           </p>
           
           {/* Pricing */}
-          <div className="flex items-baseline justify-center mb-2">
-            <span className="text-4xl sm:text-5xl font-bold text-gray-900">
-              ${planData.price}
-            </span>
-            <span className="text-gray-600 ml-2 text-lg">/month</span>
+          <div className="flex flex-col items-center justify-center mb-2">
+            <div className="flex items-baseline justify-center">
+              <span className="text-4xl sm:text-5xl font-bold text-gray-900">
+                ${displayPrice}
+              </span>
+              <span className="text-gray-600 ml-2 text-lg">{priceLabel}</span>
+            </div>
+            {billingPeriod === 'yearly' && 'yearlyPrice' in planData && planData.yearlyPrice && (
+              <p className="text-sm text-gray-500 mt-1">
+                ${planData.price}/month billed annually
+              </p>
+            )}
           </div>
           
           {/* Value proposition */}

@@ -32,12 +32,14 @@ export interface PlanLimitsResponse {
 
 export interface CheckoutCreate {
   plan: SubscriptionPlan;
+  billing_period?: 'monthly' | 'yearly';
 }
 
 export interface CheckoutResponse {
   checkout_url: string;
   transaction_id?: string;
   customer_id?: string;
+  price_id?: string;  // Price ID for locking quantity in checkout
 }
 
 // Pricing plans configuration
@@ -63,6 +65,7 @@ export const PRICING_PLANS = {
   starter: {
     name: 'Starter',
     price: 19,
+    yearlyPrice: 190, // 2 months free
     description: 'Perfect for new freelancers',
     features: [
       '2 concurrent keyword searches',
@@ -85,6 +88,7 @@ export const PRICING_PLANS = {
   professional: {
     name: 'Professional',
     price: 39,
+    yearlyPrice: 390, // 2 months free
     description: 'Most popular for serious freelancers',
     features: [
       '5 concurrent keyword searches',
@@ -111,6 +115,7 @@ export const PRICING_PLANS = {
   power: {
     name: 'Power',
     price: 79,
+    yearlyPrice: 790, // 2 months free
     description: 'For power users and agencies',
     features: [
       '10 concurrent keyword searches',

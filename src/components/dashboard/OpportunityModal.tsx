@@ -62,27 +62,134 @@ export function OpportunityModal({ opportunity, isOpen, onClose, onUpdate }: Opp
 
   // Handle modal animation and body scroll lock
   useEffect(() => {
-    if (isOpen) {
-      setIsAnimating(true);
-      document.body.style.overflow = 'hidden';
-      
-      // Handle escape key
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          onClose();
-        }
-      };
-      
-      document.addEventListener('keydown', handleEscape);
-      
-      return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = 'unset';
-      };
-    } else {
+    if (!isOpen) {
       setIsAnimating(false);
-      document.body.style.overflow = 'unset';
+      return;
     }
+    
+    setIsAnimating(true);
+    
+    // Save current scroll position
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    
+    console.log('[OpportunityModal] Opening modal - saving scroll position:', { scrollX, scrollY });
+    console.log('[OpportunityModal] Body styles before lock:', {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      width: document.body.style.width
+    });
+    
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = `-${scrollX}px`;
+    document.body.style.width = '100%';
+    
+    console.log('[OpportunityModal] Body styles after lock:', {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      width: document.body.style.width
+    });
+    
+    // Handle escape key
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        console.log('[OpportunityModal] ESC key pressed - closing modal');
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    
+    return () => {
+      console.log('[OpportunityModal] Cleanup running - restoring scroll position:', { scrollX, scrollY });
+      console.log('[OpportunityModal] Body styles before cleanup:', {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        width: document.body.style.width
+      });
+      
+      document.removeEventListener('keydown', handleEscape);
+      
+      // Force remove all inline styles we added
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('position');
+      document.body.style.removeProperty('top');
+      document.body.style.removeProperty('left');
+      document.body.style.removeProperty('width');
+      
+      console.log('[OpportunityModal] Body styles after removeProperty:', {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        width: document.body.style.width
+      });
+      
+      // Restore scroll position - use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        console.log('[OpportunityModal] Restoring scroll to:', { scrollX, scrollY });
+        
+        // Check computed styles to see if anything is still blocking
+        const computedStyle = window.getComputedStyle(document.body);
+        console.log('[OpportunityModal] Computed body styles before scroll restore:', {
+          overflow: computedStyle.overflow,
+          position: computedStyle.position,
+          top: computedStyle.top,
+          left: computedStyle.left,
+          width: computedStyle.width
+        });
+        
+        window.scrollTo({
+          left: scrollX,
+          top: scrollY,
+          behavior: 'auto'
+        });
+        
+        console.log('[OpportunityModal] Scroll restored. Current scroll:', {
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        });
+        
+        // Check computed styles after scroll restore
+        const computedStyleAfter = window.getComputedStyle(document.body);
+        console.log('[OpportunityModal] Computed body styles after scroll restore:', {
+          overflow: computedStyleAfter.overflow,
+          position: computedStyleAfter.position,
+          top: computedStyleAfter.top,
+          left: computedStyleAfter.left,
+          width: computedStyleAfter.width
+        });
+        
+        console.log('[OpportunityModal] Final inline body styles:', {
+          overflow: document.body.style.overflow,
+          position: document.body.style.position,
+          top: document.body.style.top,
+          left: document.body.style.left,
+          width: document.body.style.width
+        });
+        
+        // Check if body has any classes that might interfere
+        console.log('[OpportunityModal] Body classes:', document.body.className);
+        
+        // Check if html element has any styles
+        const htmlComputed = window.getComputedStyle(document.documentElement);
+        console.log('[OpportunityModal] HTML computed styles:', {
+          overflow: htmlComputed.overflow,
+          position: htmlComputed.position
+        });
+      });
+      
+      setIsAnimating(false);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -329,42 +436,47 @@ export function OpportunityModal({ opportunity, isOpen, onClose, onUpdate }: Opp
         </div>
 
         {/* Footer - Fixed */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => copyToClipboard(opportunity.url)}
-              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <Copy className="w-4 h-4" />
-              <span className="text-sm">{copied ? 'Copied!' : 'Copy URL'}</span>
-            </button>
-            <a
-              href={opportunity.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span className="text-sm">View Original</span>
-            </a>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              disabled={isUpdating}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleStatusUpdate}
-              disabled={isUpdating}
-              className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isUpdating ? 'Saving...' : 'Save Changes'}
-            </button>
+        <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+          {/* Mobile: Stack vertically, Desktop: Horizontal */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+            {/* Left side - Action buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => copyToClipboard(opportunity.url)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors text-xs sm:text-sm shadow-sm"
+              >
+                <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">{copied ? 'Copied!' : 'Copy URL'}</span>
+              </button>
+              <a
+                href={opportunity.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors text-xs sm:text-sm shadow-sm"
+              >
+                <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">View Original</span>
+              </a>
+            </div>
+            
+            {/* Right side - Cancel and Save */}
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <button
+                onClick={onClose}
+                disabled={isUpdating}
+                className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStatusUpdate}
+                disabled={isUpdating}
+                className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+              >
+                {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isUpdating ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         </div>
         </div>

@@ -5,6 +5,12 @@
  */
 
 import { create } from 'zustand';
+
+// Module-level guard to prevent multiple simultaneous fetchUser calls
+// This persists across component remounts and store updates
+let fetchUserCallInProgress = false;
+let lastFetchUserCallTime = 0;
+const FETCH_USER_CALL_COOLDOWN = 2000; // 2 second cooldown between calls
 import { getCurrentUser, login as apiLogin, register as apiRegister, logout as apiLogout, type User } from '@/lib/api/auth';
 import { getAuthToken, getRefreshToken, clearAuthTokens } from '@/lib/api/client';
 import { track } from '@/components/providers/AnalyticsProvider';
@@ -98,9 +104,28 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           return;
         }
 
+        // Module-level guard to prevent concurrent calls (persists across remounts)
+        const now = Date.now();
+        if (fetchUserCallInProgress || (now - lastFetchUserCallTime < FETCH_USER_CALL_COOLDOWN)) {
+          console.log('[AuthStore] fetchUser call in progress or too soon, skipping');
+          return;
+        }
+
+        // Prevent concurrent calls at store level too
+        const currentState = get();
+        if (currentState.isLoading) {
+          console.log('[AuthStore] fetchUser already in progress (store level), skipping');
+          return;
+        }
+
+        fetchUserCallInProgress = true;
+        lastFetchUserCallTime = now;
+        
         set({ isLoading: true, error: null });
         try {
+          console.log('[AuthStore] Calling getCurrentUser');
           const user = await getCurrentUser();
+          console.log('[AuthStore] getCurrentUser completed, updating state');
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error: any) {
           // If unauthorized after refresh attempt, clear auth state
@@ -110,6 +135,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           } else {
             set({ error: error?.data?.detail || 'Failed to fetch user', isLoading: false });
           }
+        } finally {
+          fetchUserCallInProgress = false;
         }
       },
 

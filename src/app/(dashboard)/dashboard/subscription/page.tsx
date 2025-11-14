@@ -13,6 +13,7 @@ import { PRICING_PLANS } from '@/types/subscription';
 import type { SubscriptionPlan, Subscription } from '@/types/subscription';
 import { ApiClientError, extractErrorMessage } from '@/lib/api/client';
 import { showToast } from '@/components/ui/Toast';
+import { usePaddle } from '@/components/providers/PaddleProvider';
 import { AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 
 /**
@@ -23,12 +24,14 @@ import { AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 export default function SubscriptionPage() {
   const router = useRouter();
   const { user, fetchUser } = useAuthStore();
+  const { isReady: paddleReady, openCheckout } = usePaddle();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     loadSubscription();
@@ -39,10 +42,6 @@ export default function SubscriptionPage() {
     try {
       const sub = await getCurrentSubscription();
       setSubscription(sub);
-      
-      // Don't refresh user data on subscription page load to prevent redirect loops
-      // The user data is already loaded by DashboardLayout
-      // Only refresh if explicitly needed (e.g., after successful payment)
     } catch (err) {
       console.error('Failed to load subscription:', err);
       showToast.error('Failed to load subscription', extractErrorMessage(err as any, 'Failed to load subscription'));
@@ -58,40 +57,56 @@ export default function SubscriptionPage() {
       return;
     }
 
-    // Early access period - show polished message
-    setError(null);
-    setSuccess(null);
-    setIsProcessing(null);
-    
-    setSuccess(
-      `Thanks for your interest in the ${PRICING_PLANS[plan]?.name || plan} plan! ` +
-      `We're currently in our early access phase, so paid plans aren't available yet. ` +
-      `You can continue enjoying full access to all features with your free trial. ` +
-      `We'll reach out when paid plans launch - stay tuned! 🚀`
-    );
-    
-    // Scroll to success message
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    // Check if Paddle.js is ready
+    if (!paddleReady) {
+      setError('Payment system is loading. Please wait a moment and try again.');
+      showToast.error('Payment System Loading', 'Paddle.js is still initializing. Please wait a moment.');
+      return;
+    }
 
-    // TODO: Uncomment when payment gateway is ready
-    /*
-    setIsProcessing(plan);
     setError(null);
     setSuccess(null);
+    setIsProcessing(plan);
 
     try {
-      // Create Paddle checkout session
-      const checkout = await createCheckout(plan);
+      // Create Paddle checkout session (transaction) on backend
+      const checkout = await createCheckout(plan, billingPeriod);
       
-      // Redirect to Paddle checkout
-      // The checkout_url from Paddle will be: http://localhost:9100/checkout?_ptxn=transaction_id
-      // Our checkout page will use Paddle.js to open the checkout overlay
-      if (checkout.checkout_url) {
+      // Use Paddle.js to open checkout overlay
+      // Official Paddle method to lock quantity: deny quantity changes via eventCallback
+      // Reference: https://developer.paddle.com/build/checkout/pass-update-checkout-items
+      // Note: Cannot use both transactionId and items - must use one or the other
+      // Since we create the transaction on the backend, we use transactionId only
+      if (checkout.transaction_id) {
+        // Use transactionId only (transaction already created on backend with quantity: 1)
+        // The eventCallback will deny any quantity change attempts
+        openCheckout({
+          transactionId: checkout.transaction_id,
+          customer: user?.email ? {
+            email: user.email,
+          } : undefined,
+          settings: {
+            displayMode: 'overlay',
+            theme: 'light',
+            locale: 'en',
+            successUrl: `${window.location.origin}/dashboard/subscription/success?transaction_id=${checkout.transaction_id}`,
+            allowLogout: false,
+          },
+          // Note: eventCallback with accept: false does NOT prevent quantity changes
+          // The official method is to mark transaction as billed when checkout loads
+          // This is handled in the global eventCallback in PaddleProvider
+          // Reference: https://developer.paddle.com/build/checkout/pass-update-checkout-items
+        });
+        
+        // Reset processing state after opening checkout
+        // The checkout overlay will handle the rest
+        setIsProcessing(null);
+      } else if (checkout.checkout_url) {
+        // Fallback: If no transaction_id but we have a checkout_url, redirect
+        // This handles cases where Paddle returns a hosted checkout URL
         window.location.href = checkout.checkout_url;
       } else {
-        throw new Error('No checkout URL received');
+        throw new Error('No transaction ID or checkout URL received from server');
       }
     } catch (err: any) {
       if (err instanceof ApiClientError) {
@@ -100,18 +115,24 @@ export default function SubscriptionPage() {
         
         // Add additional context for specific error codes
         let displayMessage = errorMessage;
-        const errorCode = (err.data as any).error_code || (typeof err.data.detail === 'object' && !Array.isArray(err.data.detail) && 'error_code' in err.data.detail ? (err.data.detail as any).error_code : undefined);
+        const errorCode = (err.data as any)?.error_code || 
+          (typeof err.data?.detail === 'object' && !Array.isArray(err.data.detail) && 'error_code' in err.data.detail 
+            ? (err.data.detail as any).error_code 
+            : undefined);
+        
         if (errorCode === 'transaction_default_checkout_url_not_set') {
           displayMessage = `${errorMessage}\n\nPlease configure the default checkout URL in your Paddle dashboard under Checkout Settings.`;
         }
         
         setError(displayMessage);
+        showToast.error('Checkout Error', displayMessage);
       } else {
-        setError('An unexpected error occurred. Please try again or contact support.');
+        const errorMsg = err.message || 'An unexpected error occurred. Please try again or contact support.';
+        setError(errorMsg);
+        showToast.error('Checkout Error', errorMsg);
       }
       setIsProcessing(null);
     }
-    */
   };
 
   const currentPlan = subscription?.plan as SubscriptionPlan | null;
@@ -136,9 +157,38 @@ export default function SubscriptionPage() {
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
           {subscription?.plan === 'free' 
-            ? 'You\'re part of our early access program! Explore all features and upgrade when paid plans launch.'
-            : 'Select the perfect plan for your freelance opportunity needs. Early access users get full features free!'}
+            ? 'Upgrade to unlock premium features and scale your freelance business.'
+            : 'Select the perfect plan for your freelance opportunity needs.'}
         </p>
+        
+        {/* Billing Period Toggle */}
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-gray-900' : 'text-gray-500'}`}>
+            Monthly
+          </span>
+          <button
+            onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+            className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            role="switch"
+            aria-checked={billingPeriod === 'yearly'}
+            aria-label="Toggle billing period"
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                billingPeriod === 'yearly' ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={`text-sm font-medium ${billingPeriod === 'yearly' ? 'text-gray-900' : 'text-gray-500'}`}>
+            Yearly
+            {billingPeriod === 'yearly' && (
+              <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                Save 2 months
+              </span>
+            )}
+          </span>
+        </div>
+        
         <button
           onClick={() => setShowComparison(true)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
@@ -147,30 +197,6 @@ export default function SubscriptionPage() {
           Compare All Plans
         </button>
       </div>
-
-      {/* Early Access Notice - Only show for free plan users */}
-      {subscription?.plan === 'free' && (
-        <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 max-w-4xl mx-auto">
-          <div className="flex items-start">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                🎉 You're in our Early Access Program!
-              </h3>
-              <p className="text-sm text-gray-700 mb-2">
-                As an early user, you're enjoying full access to all premium features at no cost. 
-                This is our way of saying thank you for being part of our journey.
-              </p>
-              <p className="text-xs text-gray-600">
-                Your early access includes unlimited keyword searches, unlimited opportunities, and all premium features. 
-                We'll let you know when paid plans become available, but for now, enjoy everything on us!
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Success Message */}
       {success && (
@@ -264,6 +290,7 @@ export default function SubscriptionPage() {
           currentPlan={currentPlan}
           onSelect={handleSelectPlan}
           isLoading={isProcessing === 'starter'}
+          billingPeriod={billingPeriod}
           className="lg:mt-8"
         />
         <PricingCard
@@ -272,12 +299,14 @@ export default function SubscriptionPage() {
           currentPlan={currentPlan}
           onSelect={handleSelectPlan}
           isLoading={isProcessing === 'professional'}
+          billingPeriod={billingPeriod}
         />
         <PricingCard
           plan="power"
           currentPlan={currentPlan}
           onSelect={handleSelectPlan}
           isLoading={isProcessing === 'power'}
+          billingPeriod={billingPeriod}
           className="lg:mt-8"
         />
       </div>
@@ -300,7 +329,9 @@ export default function SubscriptionPage() {
         </div>
         <div className="space-y-2">
           <p className="text-sm text-gray-600">
-            All plans are billed monthly. You can upgrade, downgrade, or cancel at any time.
+            {billingPeriod === 'yearly' 
+              ? 'Annual plans save you 2 months. You can upgrade, downgrade, or cancel at any time.'
+              : 'All plans are billed monthly. You can upgrade, downgrade, or cancel at any time.'}
           </p>
           <p className="text-xs text-gray-500">
             No hidden fees • No setup costs • 30-day money-back guarantee
@@ -316,4 +347,3 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-

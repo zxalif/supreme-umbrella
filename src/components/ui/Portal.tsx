@@ -26,17 +26,46 @@ export function Portal({ children, containerId = 'modal-root' }: PortalProps) {
       containerElement.style.height = '100%';
       containerElement.style.pointerEvents = 'auto';
       containerElement.style.zIndex = '9999';
-      containerElement.style.overflow = 'hidden'; // Prevent scrolling in portal container
+      // Don't set overflow here - let modals handle their own scroll locking
       document.body.appendChild(containerElement);
+      console.log('[Portal] Created container:', containerId);
+    } else {
+      console.log('[Portal] Reusing existing container:', containerId);
+      // Ensure pointer-events is set when reusing
+      containerElement.style.pointerEvents = 'auto';
     }
 
     setContainer(containerElement);
     setMounted(true);
 
     return () => {
-      // Don't remove the container on unmount as it might be used by other modals
+      // When Portal unmounts (modal closes), disable pointer events on container
+      // This prevents the empty container from blocking interactions
+      if (containerElement) {
+        // Use setTimeout to ensure this runs after React has removed children
+        setTimeout(() => {
+          if (containerElement && containerElement.children.length === 0) {
+            console.log('[Portal] Container is empty - disabling pointer events');
+            containerElement.style.pointerEvents = 'none';
+            containerElement.style.display = 'none';
+          }
+        }, 0);
+      }
     };
   }, [containerId]);
+
+  // Update container pointer-events when children change
+  useEffect(() => {
+    if (container && mounted) {
+      if (children) {
+        container.style.pointerEvents = 'auto';
+        container.style.display = 'block';
+      } else {
+        container.style.pointerEvents = 'none';
+        container.style.display = 'none';
+      }
+    }
+  }, [children, container, mounted]);
 
   if (!mounted || !container) {
     return null;

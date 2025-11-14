@@ -4,6 +4,7 @@ import { X, BookOpen, MessageCircle, ExternalLink } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Portal } from '@/components/ui/Portal';
+import { useEffect } from 'react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -17,6 +18,158 @@ interface HelpModalProps {
  */
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const pathname = usePathname();
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    // Save current scroll position
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    
+    console.log('[HelpModal] Opening modal - saving scroll position:', { scrollX, scrollY });
+    console.log('[HelpModal] Body styles before lock:', {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      width: document.body.style.width
+    });
+    
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = `-${scrollX}px`;
+    document.body.style.width = '100%';
+    
+    console.log('[HelpModal] Body styles after lock:', {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      width: document.body.style.width
+    });
+    
+    return () => {
+      console.log('[HelpModal] Cleanup running - restoring scroll position:', { scrollX, scrollY });
+      console.log('[HelpModal] Body styles before cleanup:', {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        width: document.body.style.width
+      });
+      
+      // Force remove all inline styles we added
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('position');
+      document.body.style.removeProperty('top');
+      document.body.style.removeProperty('left');
+      document.body.style.removeProperty('width');
+      
+      console.log('[HelpModal] Body styles after removeProperty:', {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        width: document.body.style.width
+      });
+      
+      // Restore scroll position - use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        console.log('[HelpModal] Restoring scroll to:', { scrollX, scrollY });
+        
+        // Check computed styles to see if anything is still blocking
+        const computedStyle = window.getComputedStyle(document.body);
+        console.log('[HelpModal] Computed body styles before scroll restore:', {
+          overflow: computedStyle.overflow,
+          position: computedStyle.position,
+          top: computedStyle.top,
+          left: computedStyle.left,
+          width: computedStyle.width
+        });
+        
+        window.scrollTo({
+          left: scrollX,
+          top: scrollY,
+          behavior: 'auto'
+        });
+        
+        console.log('[HelpModal] Scroll restored. Current scroll:', {
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        });
+        
+        // Check computed styles after scroll restore
+        const computedStyleAfter = window.getComputedStyle(document.body);
+        console.log('[HelpModal] Computed body styles after scroll restore:', {
+          overflow: computedStyleAfter.overflow,
+          position: computedStyleAfter.position,
+          top: computedStyleAfter.top,
+          left: computedStyleAfter.left,
+          width: computedStyleAfter.width
+        });
+        
+        console.log('[HelpModal] Final inline body styles:', {
+          overflow: document.body.style.overflow,
+          position: document.body.style.position,
+          top: document.body.style.top,
+          left: document.body.style.left,
+          width: document.body.style.width
+        });
+        
+        // Check if body has any classes that might interfere
+        console.log('[HelpModal] Body classes:', document.body.className);
+        
+        // Check if html element has any styles
+        const htmlComputed = window.getComputedStyle(document.documentElement);
+        console.log('[HelpModal] HTML computed styles:', {
+          overflow: htmlComputed.overflow,
+          position: htmlComputed.position
+        });
+        
+        // Check if Portal container is still present
+        const portalContainer = document.getElementById('modal-root');
+        if (portalContainer) {
+          console.log('[HelpModal] Portal container still exists:', {
+            children: portalContainer.children.length,
+            display: window.getComputedStyle(portalContainer).display,
+            pointerEvents: window.getComputedStyle(portalContainer).pointerEvents,
+            zIndex: window.getComputedStyle(portalContainer).zIndex
+          });
+        } else {
+          console.log('[HelpModal] Portal container not found');
+        }
+        
+        // Check for any fixed/absolute positioned overlays
+        const allFixedElements = Array.from(document.querySelectorAll('*')).filter(el => {
+          const style = window.getComputedStyle(el);
+          return style.position === 'fixed' && style.zIndex && parseInt(style.zIndex) >= 9999;
+        });
+        console.log('[HelpModal] Fixed elements with high z-index:', allFixedElements.map(el => ({
+          tag: el.tagName,
+          id: el.id,
+          className: el.className,
+          zIndex: window.getComputedStyle(el).zIndex
+        })));
+      });
+    };
+  }, [isOpen]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -99,20 +252,33 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   return (
     <Portal>
       <div
-        className="fixed inset-0 z-[9999] overflow-y-auto pointer-events-auto"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
         aria-labelledby="modal-title"
         role="dialog"
         aria-modal="true"
+        onClick={(e) => {
+          // Close modal when clicking backdrop
+          if (e.target === e.currentTarget) {
+            console.log('[HelpModal] Backdrop clicked - closing modal');
+            onClose();
+          }
+        }}
       >
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity pointer-events-auto"
-          onClick={onClose}
-        />
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          onClick={(e) => {
+            console.log('[HelpModal] Backdrop div clicked - closing modal');
+            e.stopPropagation();
+            onClose();
+          }}
+        ></div>
 
         {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4 relative pointer-events-none">
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden pointer-events-auto">
+        <div 
+          className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center">
@@ -122,7 +288,10 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </h2>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => {
+                console.log('[HelpModal] Close button clicked');
+                onClose();
+              }}
               className="text-gray-400 hover:text-gray-600 transition-colors"
               aria-label="Close"
             >
@@ -173,12 +342,14 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           {/* Footer */}
           <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50">
             <button
-              onClick={onClose}
+              onClick={() => {
+                console.log('[HelpModal] Footer close button clicked');
+                onClose();
+              }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Close
             </button>
-          </div>
           </div>
         </div>
       </div>

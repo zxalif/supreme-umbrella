@@ -13,7 +13,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useState } from 'react';
-import { TourButton } from '@/components/tour/TourButton';
 
 interface SidebarProps {
   currentPath: string;
@@ -132,14 +131,8 @@ export function Sidebar({ currentPath, isMobileOpen: externalMobileOpen, onMobil
           })}
         </nav>
 
-        {/* Bottom Section - Support & Tour */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
-          {/* Tour Button */}
-          <TourButton 
-            variant="sidebar" 
-            showReset={process.env.NODE_ENV === 'development'}
-          />
-          
+        {/* Bottom Section - Support */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
           {/* Support Section */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-900 mb-1">

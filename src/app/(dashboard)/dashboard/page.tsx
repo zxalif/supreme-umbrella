@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 // import { motion } from 'framer-motion'; // TODO: Add animations in future iteration
 import { useAuthStore } from '@/store/authStore';
 import { 
@@ -127,12 +127,17 @@ export default function DashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [user, fetchUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - don't depend on user/fetchUser to prevent loops
 
-  // Initial load
+  // Initial load - use ref to prevent re-running
+  const hasLoadedRef = useRef(false);
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Auto-refresh every 30 seconds
   useEffect(() => {

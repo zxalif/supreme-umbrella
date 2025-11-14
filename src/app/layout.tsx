@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics";
 import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
+import { PaddleProvider } from "@/components/providers/PaddleProvider";
 import { CookieConsent } from "@/components/CookieConsent";
+import { HeadLinks } from "@/components/HeadLinks";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -92,6 +94,17 @@ export const metadata: Metadata = {
   // Additional metadata
   category: 'Business',
   classification: 'SaaS',
+  
+  // Icons and links
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  
+  // Other metadata
+  other: {
+    'dns-prefetch': 'https://api.clienthunt.app',
+  },
 };
 
 export default function RootLayout({
@@ -101,23 +114,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <head>
-        {/* Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Favicon */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        
-        {/* DNS Prefetch for external resources */}
-        <link rel="dns-prefetch" href="https://api.clienthunt.app" />
-      </head>
       <body className={inter.className}>
+        <HeadLinks />
         <GoogleAnalytics />
-        <AnalyticsProvider>
-          {children}
-        </AnalyticsProvider>
+        <PaddleProvider>
+          <AnalyticsProvider>
+            {children}
+          </AnalyticsProvider>
+        </PaddleProvider>
         <Toaster 
           position="top-right"
           richColors

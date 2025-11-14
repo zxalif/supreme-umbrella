@@ -2,17 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { Bell, Search, Settings, LogOut, User, Menu, X } from 'lucide-react';
+import { Search, Settings, LogOut, User, Menu, X } from 'lucide-react';
 import type { User as UserType } from '@/types/user';
-import { getUnreadNotificationCount } from '@/lib/api/support';
-import { HelpButton } from '@/components/help/HelpButton';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { SearchResults } from '@/components/search/SearchResults';
+import { HelpButton } from '@/components/help/HelpButton';
 
 interface HeaderProps {
-  user: UserType;
+  user: UserType | null;
   onMobileMenuToggle?: () => void;
 }
 
@@ -23,16 +22,15 @@ interface HeaderProps {
  * - Logo with responsive text
  * - Mobile menu toggle (connected to sidebar)
  * - Search bar (desktop + mobile expandable)
- * - Notifications with badge
  * - User menu dropdown (mobile-optimized)
  * - Smooth animations and transitions
  */
 export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { logout } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
@@ -116,24 +114,6 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
     }
   }, [isSearchOpen, closeDropdown]);
 
-  // Load unread notification count
-  useEffect(() => {
-    const loadNotificationCount = async () => {
-      try {
-        const count = await getUnreadNotificationCount();
-        setUnreadCount(count);
-      } catch (error) {
-        // Silently fail for MVP - notification endpoint might not exist yet
-        console.debug('Notification count not available:', error);
-        setUnreadCount(0);
-      }
-    };
-
-    loadNotificationCount();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
@@ -198,11 +178,6 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
           {/* Right: Actions & User Menu */}
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* Help Button */}
-            <div className="hidden sm:block">
-              <HelpButton variant="header" />
-            </div>
-
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setShowMobileSearch(!showMobileSearch)}
@@ -212,34 +187,27 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
               <Search className="w-5 h-5 text-gray-700" />
             </button>
 
-            {/* Notifications - Only show if there are unread notifications (MVP) */}
-            {unreadCount > 0 && (
-              <button
-                className="relative p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5 text-gray-700" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                )}
-              </button>
-            )}
+            {/* Help Button - Desktop (next to user profile) */}
+            <div className="hidden sm:block">
+              <HelpButton variant="header" />
+            </div>
 
             {/* User Menu */}
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-w-0"
-                aria-label="User menu"
-                aria-expanded={showUserMenu}
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0 shadow-sm">
-                  {user.full_name.charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden sm:block text-sm font-medium text-gray-700 truncate max-w-[120px]">
-                  {user.full_name}
-                </span>
-              </button>
+            {user && (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-w-0"
+                  aria-label="User menu"
+                  aria-expanded={showUserMenu}
+                >
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0 shadow-sm">
+                    {user.full_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-gray-700 truncate max-w-[120px]">
+                    {user.full_name}
+                  </span>
+                </button>
 
               {/* Dropdown Menu */}
               {showUserMenu && (
@@ -252,21 +220,23 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
                   {/* Menu */}
                   <div className="absolute right-0 mt-2 w-56 sm:w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* User Info (Mobile) */}
-                    <div className="px-4 py-3 border-b border-gray-100 sm:hidden">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                          {user.full_name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {user.full_name}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {user.email}
-                          </p>
+                    {user && (
+                      <div className="px-4 py-3 border-b border-gray-100 sm:hidden">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                            {user.full_name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {user.full_name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {user.email}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Menu Items */}
                     <Link
@@ -296,7 +266,8 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

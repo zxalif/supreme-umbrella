@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { login, resendVerificationEmail, ApiClientError } from '@/lib/api/auth';
 import { extractErrorMessage } from '@/lib/api/client';
 import { useAuthStore } from '@/store/authStore';
@@ -10,13 +10,11 @@ import { showToast } from '@/components/ui/Toast';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 /**
- * Login Page
- * 
- * User authentication with email and password
- * Redirects to dashboard if already logged in
+ * Login Page Content (wrapped in Suspense for useSearchParams)
  */
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, fetchUser } = useAuthStore();
   const [formData, setFormData] = useState({
     email: '',
@@ -40,7 +38,9 @@ export default function LoginPage() {
           setTimeout(() => {
             const { isAuthenticated: authState } = useAuthStore.getState();
             if (authState) {
-              router.push('/dashboard');
+              // Check for redirect parameter
+              const redirectPath = searchParams?.get('redirect') || '/dashboard';
+              router.push(redirectPath);
               return;
             }
             setIsCheckingAuth(false);
@@ -54,7 +54,7 @@ export default function LoginPage() {
       }
     };
     checkAuth();
-  }, [fetchUser, router]);
+  }, [fetchUser, router, searchParams]);
 
   // Check for verified query param
   useEffect(() => {
@@ -119,8 +119,9 @@ export default function LoginPage() {
         }));
       }
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to specified path or dashboard
+      const redirectPath = searchParams?.get('redirect') || '/dashboard';
+      router.push(redirectPath);
     } catch (error) {
       if (error instanceof ApiClientError) {
         if (error.status === 401) {
@@ -383,6 +384,21 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Login Page (wrapped in Suspense for useSearchParams)
+ */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/20 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
 

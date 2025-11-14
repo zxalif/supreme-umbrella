@@ -35,12 +35,12 @@ const nextConfig: NextConfig = {
     // In production, we can be stricter
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com", // unsafe-eval needed for Next.js HMR in dev
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net", // unsafe-inline needed for styled-jsx, cdn.jsdelivr.net for intro.js CSS
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.paddle.com", // unsafe-eval needed for Next.js HMR in dev, cdn.paddle.com for Paddle.js
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.paddle.com", // unsafe-inline needed for styled-jsx, cdn.jsdelivr.net for intro.js CSS, cdn.paddle.com for Paddle CSS
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app",
-      "frame-src 'self'",
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app https://sandbox-api.paddle.com https://api.paddle.com https://sandbox-checkout.paddle.com https://checkout.paddle.com https://cdn.paddle.com", // Paddle API and checkout URLs, cdn.paddle.com for source maps
+      "frame-src 'self' https://sandbox-checkout.paddle.com https://checkout.paddle.com https://sandbox-buy.paddle.com https://buy.paddle.com", // Paddle checkout and buy iframes
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -89,6 +89,20 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Type',
             value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // CSS files - ensure correct MIME type
+      {
+        source: '/_next/static/:path*.css',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
           },
           {
             key: 'Cache-Control',
