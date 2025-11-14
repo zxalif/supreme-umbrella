@@ -30,8 +30,10 @@ export function Hero() {
         const animatedElements = document.querySelectorAll('.animate-fade-in-up');
         animatedElements.forEach((el) => {
           // Force reflow to ensure smooth transition
-          void el.offsetHeight;
-          el.setAttribute('data-animated', 'true');
+          if (el instanceof HTMLElement) {
+            void el.offsetHeight;
+            el.setAttribute('data-animated', 'true');
+          }
         });
       });
     });
