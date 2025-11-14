@@ -120,6 +120,11 @@ export const metadata: Metadata = {
   // Other metadata
   other: {
     'dns-prefetch': 'https://api.clienthunt.app',
+    // Search engine verification tags
+    'msvalidate.01': '05DA541C6D203C4512E299A2FD7EECC0', // Bing Webmaster Tools verification
+    ...(process.env.NEXT_PUBLIC_YANDEX_VERIFICATION && {
+      'yandex-verification': process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+    }),
   },
   
   // Manifest for PWA support

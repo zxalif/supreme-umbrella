@@ -8,6 +8,7 @@ import { X, Cookie } from 'lucide-react';
  * Cookie Consent Banner Component
  * 
  * GDPR/CCPA compliant cookie consent banner that appears on first visit.
+ * Non-intrusive bottom banner that allows users to browse without forcing acceptance.
  * Stores user preference in localStorage.
  */
 export function CookieConsent() {
@@ -17,10 +18,10 @@ export function CookieConsent() {
     // Check if user has already made a choice
     const consent = localStorage.getItem('cookie-consent');
     if (!consent) {
-      // Show banner after a short delay for better UX
+      // Show banner after a short delay for better UX (let page load first)
       const timer = setTimeout(() => {
         setShowBanner(true);
-      }, 1000);
+      }, 2000); // Increased delay to let users see the page first
       return () => clearTimeout(timer);
     }
   }, []);
@@ -37,10 +38,13 @@ export function CookieConsent() {
     }));
   };
 
-  const handleReject = () => {
-    // Rejecting cookies is not allowed - cookies are required for service functionality
-    // Show message that cookies are required
-    alert('Cookies are required to use ClientHunt. Please accept cookies to continue using our service.');
+  const handleDismiss = () => {
+    // Allow users to dismiss without accepting
+    // They can still browse, but analytics won't load
+    // Cookies will be required when they try to register/login
+    localStorage.setItem('cookie-consent', 'dismissed');
+    localStorage.setItem('cookie-consent-timestamp', new Date().toISOString());
+    setShowBanner(false);
   };
 
   if (!showBanner) {
@@ -48,42 +52,49 @@ export function CookieConsent() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full border border-gray-200">
-        <div className="p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <Cookie className="w-6 h-6 text-primary-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Cookies Required
-              </h3>
-              <p className="text-sm text-gray-700 mb-2">
-                <strong>We use cookies</strong> to enhance your experience, analyze site usage, and assist in our marketing efforts. Cookies are required to use ClientHunt.
-              </p>
-              <p className="text-xs text-gray-600">
-                By clicking "Accept All", you consent to our use of cookies. You can learn more in our{' '}
-                <Link href="/cookies" className="text-primary-600 hover:underline font-medium">
-                  Cookie Policy
-                </Link>
-                {' '}or{' '}
-                <Link href="/privacy" className="text-primary-600 hover:underline font-medium">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 md:p-6 pointer-events-auto animate-slide-up">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <Cookie className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-1">
+                  We use cookies
+                </h3>
+                <p className="text-xs md:text-sm text-gray-700 mb-2">
+                  We use cookies to enhance your experience, analyze site usage, and assist in our marketing efforts.{' '}
+                  <Link href="/cookies" className="text-primary-600 hover:underline font-medium">
+                    Learn more
+                  </Link>
+                  {' '}in our{' '}
+                  <Link href="/cookies" className="text-primary-600 hover:underline font-medium">
+                    Cookie Policy
+                  </Link>
+                  .
+                </p>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center justify-end gap-3">
-            <button
-              onClick={handleAccept}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
-            >
-              Accept All
-            </button>
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <button
+                onClick={handleDismiss}
+                className="px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap"
+                aria-label="Dismiss cookie banner"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={handleAccept}
+                className="px-4 md:px-6 py-2 text-xs md:text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap"
+              >
+                Accept All
+              </button>
+            </div>
           </div>
         </div>
       </div>
+      
     </div>
   );
 }

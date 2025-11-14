@@ -63,6 +63,16 @@ export function HeadLinks() {
     addMeta('og:image:secure_url', `${baseUrl}/og-image.jpg`, 'og:image:secure_url');
     addMeta('og:image:type', 'image/jpeg', 'og:image:type');
     addMeta('theme-color', '#3B82F6'); // Blue theme color
+    
+    // Search engine verification tags
+    // Bing Webmaster Tools verification
+    addMeta('msvalidate.01', '05DA541C6D203C4512E299A2FD7EECC0', 'msvalidate.01');
+    
+    // Yandex verification (if set in environment)
+    const yandexVerification = process.env.NEXT_PUBLIC_YANDEX_VERIFICATION;
+    if (yandexVerification) {
+      addMeta('yandex-verification', yandexVerification, 'yandex-verification');
+    }
   }, []);
 
   return null;
