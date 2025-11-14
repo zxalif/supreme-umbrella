@@ -8,6 +8,7 @@ import { ShareButtons } from './ShareButtons';
 import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 import { BreadcrumbsWrapper } from '@/components/navigation/BreadcrumbsWrapper';
 import { getBlogPostBySlug, getRelatedBlogPosts } from '@/lib/blog-data';
+import { blogPostContent } from '@/lib/blog-content';
 
 // SECURITY: Simple HTML sanitization for server-side rendering
 // Since blog content is static and controlled, we use a simple regex-based sanitizer
@@ -243,7 +244,9 @@ function markdownToHtml(markdown: string): string {
   const flushParagraph = () => {
     if (currentParagraph.length > 0) {
       const paragraphText = currentParagraph.join(' ');
-      processedLines.push(`<p class="mb-4 leading-relaxed">${paragraphText}</p>`);
+      // Process inline markdown (bold, italic, links, contextual links) BEFORE wrapping in <p>
+      const processedText = processInlineMarkdown(paragraphText);
+      processedLines.push(`<p class="mb-4 leading-relaxed">${processedText}</p>`);
       currentParagraph = [];
     }
   };
@@ -318,70 +321,112 @@ function markdownToHtml(markdown: string): string {
   flushParagraph();
   flushList();
 
-  // Join and process inline markdown in paragraphs
-  let html = processedLines.join('\n');
-
-  // Process inline markdown in already-processed paragraphs
-  html = html.replace(/<p[^>]*>(.*?)<\/p>/g, (match, content) => {
-    if (!content.includes('<strong>') && !content.includes('<em>') && !content.includes('<a>')) {
-      return match.replace(content, processInlineMarkdown(content));
-    }
-    return match;
-  });
-
-  return html;
+  // Join all processed lines - paragraphs are already processed
+  return processedLines.join('\n');
 }
 
 /**
  * Add contextual internal links to content
  * Links relevant keywords to internal pages
+ * IMPORTANT: Only processes plain text, never HTML
  */
 function addContextualLinks(text: string): string {
+  // Skip if text contains any HTML tags - this should never happen
+  // as we only call this on plain text
+  if (/<[a-z][\s\S]*>/i.test(text)) {
+    console.warn('addContextualLinks called on HTML text, skipping');
+    return text;
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
   
   // Internal link mappings (keyword -> URL)
-  const internalLinks: Record<string, string> = {
-    'ClientHunt': '/',
-    'ClientHunt.app': '/',
-    'keyword search': '/docs/keyword-searches',
-    'keyword searches': '/docs/keyword-searches',
-    'getting started': '/docs/getting-started',
-    'opportunities': '/docs/opportunities',
-    'analytics': '/docs/analytics',
-    'pricing': '/pricing',
-    'blog': '/blog',
-    'documentation': '/docs',
-    'docs': '/docs',
-  };
+  // Sort by length (longest first) to avoid partial matches
+  const internalLinks: Array<[string, string]> = [
+    ['ClientHunt.app', '/'],
+    ['keyword searches', '/docs/keyword-searches'],
+    ['keyword search', '/docs/keyword-searches'],
+    ['getting started', '/docs/getting-started'],
+    ['ClientHunt', '/'],
+    ['documentation', '/docs'],
+    ['opportunities', '/docs/opportunities'],
+    ['analytics', '/docs/analytics'],
+    ['pricing', '/pricing'],
+    ['blog', '/blog'],
+    // 'docs' should be last to avoid matching it in 'documentation'
+    ['docs', '/docs'],
+  ];
 
-  // Add internal links for keywords (case-insensitive, whole word only)
+  // Plain text processing only
+  return processTextForLinks(text, internalLinks);
+}
+
+/**
+ * Process plain text to add contextual links
+ * Does not process HTML or text already inside links
+ */
+function processTextForLinks(text: string, internalLinks: Array<[string, string]>): string {
   let processedText = text;
-  for (const [keyword, url] of Object.entries(internalLinks)) {
+  
+  for (const [keyword, url] of internalLinks) {
     // Create regex to match whole words only (case-insensitive)
-    const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    // Match word boundaries (not letters/numbers before/after)
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(^|[^a-zA-Z0-9/])${escapedKeyword}([^a-zA-Z0-9/]|$)`, 'gi');
     
-    // Only add link if keyword is not already inside an <a> tag
-    processedText = processedText.replace(regex, (match, offset, string) => {
-      // Check if we're inside an existing link tag
-      const beforeMatch = string.substring(Math.max(0, offset - 200), offset);
-      const afterMatch = string.substring(offset, Math.min(string.length, offset + match.length + 200));
+    // Use replace with a function that tracks position
+    let lastIndex = 0;
+    const result: string[] = [];
+    let match;
+    
+    while ((match = regex.exec(processedText)) !== null) {
+      const before = match[1] || '';
+      const after = match[2] || '';
+      const matchStart = match.index;
+      const matchEnd = matchStart + match[0].length;
       
-      // Simple check: if there's an unclosed <a> tag before, don't link
-      const openTags = (beforeMatch.match(/<a\b[^>]*>/gi) || []).length;
-      const closeTags = (beforeMatch.match(/<\/a>/gi) || []).length;
+      // Add text before the match
+      result.push(processedText.substring(lastIndex, matchStart));
       
-      if (openTags > closeTags) {
-        // We're inside an existing link, don't modify
-        return match;
+      // Don't link if it's part of a URL path (has / before or after)
+      if (before === '/' || after === '/') {
+        result.push(match[0]);
+        lastIndex = matchEnd;
+        continue;
       }
       
-      // Check if this exact match was already linked
-      if (beforeMatch.includes(`href="${url}"`) || beforeMatch.includes(`href='${url}'`)) {
-        return match;
+      // Check if we're inside an HTML tag or existing link
+      const beforeText = processedText.substring(0, matchStart);
+      
+      // Count unclosed <a> tags before this position
+      const openATags = (beforeText.match(/<a\b[^>]*>/gi) || []).length;
+      const closeATags = (beforeText.match(/<\/a>/gi) || []).length;
+      
+      // If we're inside an <a> tag, don't link
+      if (openATags > closeATags) {
+        result.push(match[0]);
+        lastIndex = matchEnd;
+        continue;
       }
       
-      return `<a href="${url}" class="text-blue-600 hover:text-blue-700 underline font-medium">${match}</a>`;
-    });
+      // Check if we're inside any HTML tag (not just <a>)
+      const lastOpenTag = beforeText.lastIndexOf('<');
+      const lastCloseTag = beforeText.lastIndexOf('>');
+      if (lastOpenTag > lastCloseTag) {
+        // We're inside an HTML tag (like in an attribute)
+        result.push(match[0]);
+        lastIndex = matchEnd;
+        continue;
+      }
+      
+      // Create the link, preserving the before/after characters
+      result.push(`${before}<a href="${url}" class="text-blue-600 hover:text-blue-700 underline font-medium">${keyword}</a>${after}`);
+      lastIndex = matchEnd;
+    }
+    
+    // Add remaining text
+    result.push(processedText.substring(lastIndex));
+    processedText = result.join('');
   }
 
   return processedText;
@@ -409,8 +454,11 @@ function processInlineMarkdown(text: string): string {
     return `<a href="${sanitizedUrl}" class="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
   });
 
-  // Add contextual internal links
-  text = addContextualLinks(text);
+  // Add contextual internal links - ONLY on plain text, not HTML
+  // Skip if text already contains HTML tags (means it's been processed)
+  if (!/<[a-z][\s\S]*>/i.test(text)) {
+    text = addContextualLinks(text);
+  }
 
   return text;
 }
@@ -459,7 +507,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts[slug];
+  const post = getBlogPostBySlug(slug);
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
 
   if (!post) {
@@ -502,7 +550,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = blogPosts[slug];
+  const post = getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -511,8 +559,16 @@ export default async function BlogPostPage({ params }: Props) {
   // Get related posts using the smart algorithm
   const relatedPosts = getRelatedBlogPosts(slug, 3);
 
+  // Get content from blogPostContent
+  const postContent = blogPostContent[slug] || '';
+  
+  if (!postContent) {
+    // If no content found, show a message
+    console.warn(`No content found for blog post: ${slug}`);
+  }
+
   // Convert markdown to HTML and sanitize
-  const htmlContent = markdownToHtml(post.content);
+  const htmlContent = markdownToHtml(postContent);
   const sanitizedContent = sanitizeHtml(htmlContent);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
@@ -539,14 +595,14 @@ export default async function BlogPostPage({ params }: Props) {
       />
       
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Breadcrumbs */}
+      <div className="min-h-screen bg-gray-50" style={{ paddingTop: '80px' }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
+          {/* Breadcrumbs - Using relative paths for internal navigation */}
           <BreadcrumbsWrapper
             items={[
-              { name: 'Home', url: baseUrl },
-              { name: 'Blog', url: `${baseUrl}/blog` },
-              { name: post.title, url: postUrl },
+              { name: 'Home', url: '/' },
+              { name: 'Blog', url: '/blog' },
+              { name: post.title, url: `/blog/${slug}` },
             ]}
           />
 

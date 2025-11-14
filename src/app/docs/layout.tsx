@@ -27,12 +27,12 @@ export default function DocsLayout({
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50" style={{ paddingTop: '80px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar Navigation */}
             <aside className="lg:w-64 flex-shrink-0">
-              <div className="sticky top-24 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="sticky top-20 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="mb-4 pb-4 border-b border-gray-200">
                   <Link href="/docs" className="flex items-center space-x-2 text-gray-900 hover:text-blue-600 transition-colors">
                     <Book className="w-5 h-5" />
@@ -69,7 +69,9 @@ export default function DocsLayout({
             {/* Main Content */}
             <main className="flex-1 min-w-0">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                {children}
+                <div className="pt-0">
+                  {children}
+                </div>
               </div>
             </main>
           </div>

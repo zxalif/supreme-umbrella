@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
  * Docs Breadcrumbs Component
  * 
  * Automatically generates breadcrumbs for documentation pages
+ * Uses relative paths for internal navigation (works in dev, staging, and production)
  */
 export function DocsBreadcrumbs() {
   const pathname = usePathname();
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
 
   // Map paths to breadcrumb labels
   const pathLabels: Record<string, string> = {
@@ -22,10 +22,10 @@ export function DocsBreadcrumbs() {
     '/docs/faq': 'FAQ',
   };
 
-  // Build breadcrumb items
+  // Build breadcrumb items using relative paths
   const items = [
-    { name: 'Home', url: baseUrl },
-    { name: 'Documentation', url: `${baseUrl}/docs` },
+    { name: 'Home', url: '/' },
+    { name: 'Documentation', url: '/docs' },
   ];
 
   // Add current page if not the docs overview
@@ -33,7 +33,7 @@ export function DocsBreadcrumbs() {
     const label = pathLabels[pathname] || pathname.split('/').pop()?.replace(/-/g, ' ') || 'Page';
     items.push({
       name: label,
-      url: `${baseUrl}${pathname}`,
+      url: pathname, // Use relative path
     });
   }
 

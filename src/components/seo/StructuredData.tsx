@@ -155,17 +155,8 @@ export function SoftwareApplicationSchema({
   ],
   softwareVersion = '1.0',
   offers = [
-    // Monthly plans
-    { 
-      price: '19', 
-      priceCurrency: 'USD', 
-      availability: 'https://schema.org/InStock', 
-      url: 'https://clienthunt.app/pricing',
-      priceSpecification: {
-        priceType: 'https://schema.org/Subscription',
-        billingDuration: 'P1M', // 1 month
-      },
-    },
+    // Most popular plan (Professional) - monthly
+    // Note: Individual plans are handled by ProductSchema in Pricing component
     { 
       price: '39', 
       priceCurrency: 'USD', 
@@ -174,47 +165,6 @@ export function SoftwareApplicationSchema({
       priceSpecification: {
         priceType: 'https://schema.org/Subscription',
         billingDuration: 'P1M', // 1 month
-      },
-    },
-    { 
-      price: '79', 
-      priceCurrency: 'USD', 
-      availability: 'https://schema.org/InStock', 
-      url: 'https://clienthunt.app/pricing',
-      priceSpecification: {
-        priceType: 'https://schema.org/Subscription',
-        billingDuration: 'P1M', // 1 month
-      },
-    },
-    // Yearly plans (2 months free)
-    { 
-      price: '190', 
-      priceCurrency: 'USD', 
-      availability: 'https://schema.org/InStock', 
-      url: 'https://clienthunt.app/pricing',
-      priceSpecification: {
-        priceType: 'https://schema.org/Subscription',
-        billingDuration: 'P1Y', // 1 year
-      },
-    },
-    { 
-      price: '390', 
-      priceCurrency: 'USD', 
-      availability: 'https://schema.org/InStock', 
-      url: 'https://clienthunt.app/pricing',
-      priceSpecification: {
-        priceType: 'https://schema.org/Subscription',
-        billingDuration: 'P1Y', // 1 year
-      },
-    },
-    { 
-      price: '790', 
-      priceCurrency: 'USD', 
-      availability: 'https://schema.org/InStock', 
-      url: 'https://clienthunt.app/pricing',
-      priceSpecification: {
-        priceType: 'https://schema.org/Subscription',
-        billingDuration: 'P1Y', // 1 year
       },
     },
   ],
@@ -240,21 +190,34 @@ export function SoftwareApplicationSchema({
       "name": "ClientHunt",
       "url": baseUrl,
     },
-    "offers": offers.map(offer => ({
-      "@type": "Offer",
-      "price": offer.price,
-      "priceCurrency": offer.priceCurrency,
-      "availability": offer.availability || "https://schema.org/InStock",
-      ...(offer.url && { "url": offer.url }),
-      ...(offer.priceValidUntil && { "priceValidUntil": offer.priceValidUntil }),
-      ...(offer.priceSpecification && {
-        "priceSpecification": {
-          "@type": "UnitPriceSpecification",
-          "priceType": offer.priceSpecification.priceType || "https://schema.org/Subscription",
-          "billingDuration": offer.priceSpecification.billingDuration,
-        },
-      }),
-    })),
+    "offers": offers.map(offer => {
+      const offerObj: any = {
+        "@type": "Offer",
+        "price": offer.price,
+        "priceCurrency": offer.priceCurrency,
+        "availability": offer.availability || "https://schema.org/InStock",
+      };
+      
+      if (offer.url) {
+        offerObj.url = offer.url;
+      }
+      
+      if (offer.priceValidUntil) {
+        offerObj.priceValidUntil = offer.priceValidUntil;
+      }
+      
+      // Add billing duration as a simple property if specified
+      if (offer.priceSpecification?.billingDuration) {
+        // For monthly subscriptions, add priceType
+        if (offer.priceSpecification.billingDuration === 'P1M') {
+          offerObj.priceType = "https://schema.org/Subscription";
+        } else if (offer.priceSpecification.billingDuration === 'P1Y') {
+          offerObj.priceType = "https://schema.org/Subscription";
+        }
+      }
+      
+      return offerObj;
+    }),
     ...(aggregateRating && {
       "aggregateRating": {
         "@type": "AggregateRating",

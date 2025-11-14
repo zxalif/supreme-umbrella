@@ -40,18 +40,16 @@ export function BlogPageClient() {
 
   const displayedPosts = filteredPosts.filter(post => !post.featured);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clienthunt.app';
-
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Breadcrumbs */}
+      <div className="min-h-screen bg-gray-50" style={{ paddingTop: '80px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
+          {/* Breadcrumbs - Using relative paths for internal navigation */}
           <Breadcrumbs
             items={[
-              { name: 'Home', url: baseUrl },
-              { name: 'Blog', url: `${baseUrl}/blog` },
+              { name: 'Home', url: '/' },
+              { name: 'Blog', url: '/blog' },
             ]}
           />
           
