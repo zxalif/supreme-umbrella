@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Bell, BellOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { apiPut } from '@/lib/api/client';
 import type { User } from '@/lib/api/auth';
@@ -14,12 +14,13 @@ interface ProfileFormProps {
 /**
  * Profile Form Component
  * 
- * Form for editing user profile (name, email)
+ * Form for editing user profile (name, email, notification preferences)
  */
 export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
   const { fetchUser } = useAuthStore();
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
+    email_notifications_enabled: user.email_notifications_enabled ?? true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,9 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
     }
   };
 
-  const hasChanges = formData.full_name !== user.full_name;
+  const hasChanges = 
+    formData.full_name !== user.full_name ||
+    formData.email_notifications_enabled !== (user.email_notifications_enabled ?? true);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,6 +120,48 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
         <p className="text-xs text-gray-500 mt-1">
           Email address cannot be changed. Contact support if you need to update your email.
         </p>
+      </div>
+
+      {/* Email Notifications Toggle */}
+      <div className="border-t border-gray-200 pt-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <label htmlFor="email_notifications" className="form-label flex items-center gap-2">
+              {formData.email_notifications_enabled ? (
+                <Bell className="w-5 h-5 text-blue-600" />
+              ) : (
+                <BellOff className="w-5 h-5 text-gray-400" />
+              )}
+              Email Notifications
+            </label>
+            <p className="text-sm text-gray-600 mt-1">
+              Receive email notifications when new leads are found matching your keyword searches.
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              You'll receive emails every 6 hours when new opportunities are discovered.
+            </p>
+          </div>
+          <div className="ml-4">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, email_notifications_enabled: !formData.email_notifications_enabled })}
+              className={`
+                relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                ${formData.email_notifications_enabled ? 'bg-blue-600' : 'bg-gray-200'}
+              `}
+              role="switch"
+              aria-checked={formData.email_notifications_enabled}
+              aria-labelledby="email_notifications"
+            >
+              <span
+                className={`
+                  pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                  ${formData.email_notifications_enabled ? 'translate-x-5' : 'translate-x-0'}
+                `}
+              />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Submit Button */}
