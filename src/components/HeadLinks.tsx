@@ -102,8 +102,12 @@ export function HeadLinks() {
     };
     
     // Additional Open Graph tags for better Facebook/LinkedIn support
+    // LinkedIn requires these specific tags for proper preview display
     addMeta('og:image:secure_url', `${baseUrl}/og-image.jpg`, 'og:image:secure_url');
+    addMeta('og:image:width', '1200', 'og:image:width');
+    addMeta('og:image:height', '627', 'og:image:height');
     addMeta('og:image:type', 'image/jpeg', 'og:image:type');
+    addMeta('og:image:alt', 'ClientHunt - AI-Powered Reddit Lead Generation Platform for Freelancers', 'og:image:alt');
     addMeta('theme-color', '#3B82F6'); // Blue theme color
     
     // Search engine verification tags

@@ -69,6 +69,7 @@ export const metadata: Metadata = {
   },
   
   // Open Graph (Facebook, LinkedIn, etc.)
+  // LinkedIn requires specific image dimensions: 1200x627px (1.91:1 ratio) for optimal display
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -78,13 +79,13 @@ export const metadata: Metadata = {
     description: 'Find freelance opportunities on Reddit automatically. AI-powered lead generation monitors Reddit 24/7 for client posts matching your skills. Free 1-month trial, no credit card required.',
     images: [
       {
-        url: `${baseUrl}/og-image.jpg`, // Absolute URL required for Facebook
-        // Note: Recommended size is 1200×630px (1.91:1 aspect ratio) for optimal display
-        // Current image is 1536×1024px - will work but may be cropped on some platforms
-        width: 1536, // Actual image width
-        height: 1024, // Actual image height
+        url: `${baseUrl}/og-image.jpg`, // Absolute HTTPS URL required for LinkedIn
+        width: 1200, // LinkedIn optimal width
+        height: 627, // LinkedIn optimal height (1.91:1 ratio)
         alt: 'ClientHunt - AI-Powered Reddit Lead Generation Platform for Freelancers',
         type: 'image/jpeg',
+        // LinkedIn-specific: ensure secure URL
+        secureUrl: `${baseUrl}/og-image.jpg`,
       },
     ],
   },
