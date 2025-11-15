@@ -64,6 +64,8 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+    // Note: Yandex and Bing bot configurations are handled via robots.txt
+    // See src/app/robots.ts for Yandex and Bingbot-specific rules
   },
   
   // Open Graph (Facebook, LinkedIn, etc.)

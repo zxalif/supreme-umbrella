@@ -114,6 +114,7 @@ export function HeadLinks() {
     addMeta('msvalidate.01', '05DA541C6D203C4512E299A2FD7EECC0');
     
     // Yandex Webmaster verification (uses 'name' attribute, not 'property')
+    // Yandex requires this meta tag for verification
     addMeta('yandex-verification', 'b62e7fb759963944');
   }, []);
 

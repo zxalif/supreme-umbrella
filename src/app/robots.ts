@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         // Block private routes only
         // Note: We do NOT block /_next/ because:
-        // 1. Google needs static assets (CSS, JS, fonts) to render pages
+        // 1. Search engines need static assets (CSS, JS, fonts) to render pages
         // 2. Next.js static assets are hashed and don't expose sensitive info
         // 3. Internal routes are already protected by authentication
         disallow: [
@@ -31,6 +31,42 @@ export default function robots(): MetadataRoute.Robots {
           '/reset-password',
           '/verify-email',
           '/checkout', // Private transaction page
+        ],
+      },
+      // Yandex-specific rules
+      {
+        userAgent: 'Yandex',
+        allow: '/',
+        disallow: [
+          '/dashboard/', 
+          '/api/', 
+          '/admin/', 
+          '/settings/',
+          '/search',
+          '/login',
+          '/register',
+          '/forgot-password',
+          '/reset-password',
+          '/verify-email',
+          '/checkout',
+        ],
+      },
+      // Bing-specific rules
+      {
+        userAgent: 'Bingbot',
+        allow: '/',
+        disallow: [
+          '/dashboard/', 
+          '/api/', 
+          '/admin/', 
+          '/settings/',
+          '/search',
+          '/login',
+          '/register',
+          '/forgot-password',
+          '/reset-password',
+          '/verify-email',
+          '/checkout',
         ],
       },
     ],
