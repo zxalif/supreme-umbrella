@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, AlertCircle, CheckCircle, Bell, BellOff } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Bell, BellOff, Mail, MailCheck } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { apiPut } from '@/lib/api/client';
+import { resendVerificationEmailAuthenticated } from '@/lib/api/auth';
+import { showToast } from '@/components/ui/Toast';
 import type { User } from '@/lib/api/auth';
 
 interface ProfileFormProps {
@@ -25,6 +27,7 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,14 +112,73 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
         <label htmlFor="email" className="form-label">
           Email Address
         </label>
-        <input
-          type="email"
-          id="email"
-          value={user.email}
-          className="input bg-gray-50 cursor-not-allowed"
-          disabled
-          readOnly
-        />
+        <div className="relative">
+          <input
+            type="email"
+            id="email"
+            value={user.email}
+            className="input bg-gray-50 cursor-not-allowed pr-10"
+            disabled
+            readOnly
+          />
+          {user.is_verified ? (
+            <MailCheck className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600" />
+          ) : (
+            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          )}
+        </div>
+        {user.is_verified ? (
+          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+            <MailCheck className="w-3 h-3" />
+            Email verified
+          </p>
+        ) : (
+          <div className="mt-2">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-800 mb-1">
+                    Email not verified
+                  </p>
+                  <p className="text-xs text-yellow-700">
+                    Please verify your email address to access all features. Check your inbox for the verification email.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsResendingVerification(true);
+                  try {
+                    await resendVerificationEmailAuthenticated();
+                    showToast.success('Verification Email Sent', 'Please check your email and click the verification link.');
+                    // Refresh user data to update verification status if they verify quickly
+                    await fetchUser();
+                  } catch (err: any) {
+                    const errorMessage = err?.data?.detail || 'Failed to resend verification email';
+                    showToast.error('Failed to Resend Email', errorMessage);
+                  } finally {
+                    setIsResendingVerification(false);
+                  }
+                }}
+                disabled={isResendingVerification}
+                className="mt-3 text-sm text-yellow-800 hover:text-yellow-900 font-medium underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isResendingVerification ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-yellow-800 border-t-transparent rounded-full animate-spin"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    Resend Verification Email
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
         <p className="text-xs text-gray-500 mt-1">
           Email address cannot be changed. Contact support if you need to update your email.
         </p>

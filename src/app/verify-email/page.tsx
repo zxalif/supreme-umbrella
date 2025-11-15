@@ -43,12 +43,21 @@ function VerifyEmailContent() {
       } catch (error) {
         setStatus('error');
         if (error instanceof ApiClientError) {
-          const errorDetail = extractErrorMessage(error.data, 'Verification failed. The link may have expired.');
+          // Handle structured error response
+          let errorDetail: string;
+          if (error.data && typeof error.data === 'object' && 'message' in error.data) {
+            errorDetail = error.data.message as string;
+          } else {
+            errorDetail = extractErrorMessage(error.data, 'Verification failed. The link may have expired.');
+          }
           setMessage(errorDetail);
           
           // If token is invalid/expired, suggest resending
           if (error.status === 400 && (errorDetail.includes('expired') || errorDetail.includes('Invalid'))) {
-            setMessage(`${errorDetail} You can request a new verification email from the login page.`);
+            const suggestion = (error.data && typeof error.data === 'object' && 'suggestion' in error.data) 
+              ? error.data.suggestion as string
+              : 'You can request a new verification email from the login page.';
+            setMessage(`${errorDetail} ${suggestion}`);
           }
         } else {
           setMessage('An unexpected error occurred. Please try again.');

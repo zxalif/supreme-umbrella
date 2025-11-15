@@ -15,7 +15,8 @@ export interface User {
   full_name: string;
   subscription?: Subscription;
   email_notifications_enabled?: boolean;
-  // Note: is_active, is_verified, created_at, updated_at are excluded
+  is_verified?: boolean;  // Included for authenticated users to show verification status
+  // Note: is_active, created_at, updated_at are excluded
   // as they are not used by the frontend and are handled server-side
 }
 

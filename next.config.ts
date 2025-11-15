@@ -114,13 +114,66 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // CSS files - ensure correct MIME type
+      // CSS files - ensure correct MIME type (multiple patterns for dev/prod)
+      {
+        source: '/_next/static/css/:path*.css',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         source: '/_next/static/:path*.css',
         headers: [
           {
             key: 'Content-Type',
             value: 'text/css; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Font files - ensure correct MIME types
+      {
+        source: '/_next/static/media/:path*.woff2',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'font/woff2',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/media/:path*.woff',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'font/woff',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/media/:path*.ttf',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'font/ttf',
           },
           {
             key: 'Cache-Control',

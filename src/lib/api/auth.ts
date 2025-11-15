@@ -220,11 +220,25 @@ export async function verifyEmail(data: VerifyEmailRequest): Promise<VerifyEmail
 }
 
 /**
- * Resend verification email
+ * Resend verification email (unauthenticated - requires email)
  */
 export async function resendVerificationEmail(data: ResendVerificationRequest): Promise<void> {
   try {
     await apiPost('/api/v1/auth/resend-verification', data);
+  } catch (error) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+    throw new ApiClientError(0, { detail: 'Failed to resend verification email' });
+  }
+}
+
+/**
+ * Resend verification email (authenticated - no email required)
+ */
+export async function resendVerificationEmailAuthenticated(): Promise<void> {
+  try {
+    await apiPost('/api/v1/auth/resend-verification-authenticated', {});
   } catch (error) {
     if (error instanceof ApiClientError) {
       throw error;
