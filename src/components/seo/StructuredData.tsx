@@ -60,6 +60,12 @@ export function WebSiteSchema({
     }),
   };
 
+  // Validate structured data format for Google sitelinks search box
+  // Google requires:
+  // - urlTemplate must use {search_term_string} placeholder
+  // - query-input must be "required name=search_term_string"
+  // - Search page must be accessible and return 200 OK
+
   return (
     <script
       type="application/ld+json"

@@ -312,14 +312,17 @@ export function ModernOpportunityCard({ opportunity, onUpdate, viewMode = 'card'
       const originalOverflow = document.body.style.overflow || '';
       const originalPaddingRight = document.body.style.paddingRight || '';
       
-      // Calculate scrollbar width to prevent layout shift
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      
-      // Lock body scroll
-      document.body.style.overflow = 'hidden';
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
+      // Batch DOM reads and writes to avoid forced reflows
+      // Read all geometric properties first
+      requestAnimationFrame(() => {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        
+        // Then write all style changes in the same frame
+        document.body.style.overflow = 'hidden';
+        if (scrollbarWidth > 0) {
+          document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+      });
       
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {

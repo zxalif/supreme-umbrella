@@ -29,33 +29,42 @@ export function HelpTooltip({
 
   useEffect(() => {
     if (isVisible && tooltipRef.current && triggerRef.current) {
-      const tooltip = tooltipRef.current;
-      const trigger = triggerRef.current;
-      const rect = trigger.getBoundingClientRect();
-
-      // Position tooltip dynamically
-      switch (position) {
-        case 'top':
-          tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
-          tooltip.style.left = `${rect.left + rect.width / 2}px`;
-          tooltip.style.transform = 'translateX(-50%)';
-          break;
-        case 'bottom':
-          tooltip.style.top = `${rect.bottom + 8}px`;
-          tooltip.style.left = `${rect.left + rect.width / 2}px`;
-          tooltip.style.transform = 'translateX(-50%)';
-          break;
-        case 'left':
-          tooltip.style.right = `${window.innerWidth - rect.left + 8}px`;
-          tooltip.style.top = `${rect.top + rect.height / 2}px`;
-          tooltip.style.transform = 'translateY(-50%)';
-          break;
-        case 'right':
-          tooltip.style.left = `${rect.right + 8}px`;
-          tooltip.style.top = `${rect.top + rect.height / 2}px`;
-          tooltip.style.transform = 'translateY(-50%)';
-          break;
-      }
+      // Batch DOM reads and writes using requestAnimationFrame to avoid forced reflows
+      requestAnimationFrame(() => {
+        if (tooltipRef.current && triggerRef.current) {
+          const tooltip = tooltipRef.current;
+          const trigger = triggerRef.current;
+          
+          // Batch all DOM reads first
+          const rect = trigger.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const windowWidth = window.innerWidth;
+          
+          // Then batch all DOM writes in the same frame
+          switch (position) {
+            case 'top':
+              tooltip.style.bottom = `${windowHeight - rect.top + 8}px`;
+              tooltip.style.left = `${rect.left + rect.width / 2}px`;
+              tooltip.style.transform = 'translateX(-50%)';
+              break;
+            case 'bottom':
+              tooltip.style.top = `${rect.bottom + 8}px`;
+              tooltip.style.left = `${rect.left + rect.width / 2}px`;
+              tooltip.style.transform = 'translateX(-50%)';
+              break;
+            case 'left':
+              tooltip.style.right = `${windowWidth - rect.left + 8}px`;
+              tooltip.style.top = `${rect.top + rect.height / 2}px`;
+              tooltip.style.transform = 'translateY(-50%)';
+              break;
+            case 'right':
+              tooltip.style.left = `${rect.right + 8}px`;
+              tooltip.style.top = `${rect.top + rect.height / 2}px`;
+              tooltip.style.transform = 'translateY(-50%)';
+              break;
+          }
+        }
+      });
     }
   }, [isVisible, position]);
 

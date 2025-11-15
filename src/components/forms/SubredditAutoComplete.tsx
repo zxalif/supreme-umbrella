@@ -130,13 +130,19 @@ export function SubredditAutoComplete({
   };
 
   // Calculate dropdown position based on input element
+  // Use requestAnimationFrame to batch DOM reads and avoid forced reflows
   const updateDropdownPosition = useCallback(() => {
     if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: rect.width,
+      // Batch DOM read in requestAnimationFrame to avoid forced reflow
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          const rect = inputRef.current.getBoundingClientRect();
+          setDropdownPosition({
+            top: rect.bottom + window.scrollY + 4,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+          });
+        }
       });
     }
   }, []);

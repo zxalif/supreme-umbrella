@@ -107,15 +107,16 @@ export const metadata: Metadata = {
   classification: 'SaaS',
   
   // Icons and links - Multiple sizes for better compatibility
+  // Using absolute URLs for better search engine compatibility (Yandex, Google, etc.)
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: `${baseUrl}/favicon.ico`, sizes: 'any' },
+      { url: `${baseUrl}/favicon.ico`, type: 'image/x-icon' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: `${baseUrl}/apple-touch-icon.png`, sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: `${baseUrl}/favicon.ico`,
   },
   
   // Other metadata
@@ -140,6 +141,35 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className={inter.className}>
+        {/* Preconnect hints - critical for LCP optimization, saves ~90ms for Paddle CDN */}
+        {/* Added via inline script that runs immediately, before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (document.head) {
+                  const origins = [
+                    { href: 'https://cdn.paddle.com', crossOrigin: 'anonymous' },
+                    { href: 'https://fonts.googleapis.com' },
+                    { href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+                    { href: 'https://api.clienthunt.app' }
+                  ];
+                  origins.forEach(function(origin) {
+                    if (!document.querySelector('link[rel="preconnect"][href="' + origin.href + '"]')) {
+                      var link = document.createElement('link');
+                      link.rel = 'preconnect';
+                      link.href = origin.href;
+                      if (origin.crossOrigin) {
+                        link.crossOrigin = origin.crossOrigin;
+                      }
+                      document.head.appendChild(link);
+                    }
+                  });
+                }
+              })();
+            `,
+          }}
+        />
         {/* WebSite Schema for sitelinks search box - appears on all pages */}
         <WebSiteSchema 
           potentialAction={{
@@ -147,7 +177,7 @@ export default function RootLayout({
             queryInput: "required name=search_term_string",
           }}
         />
-        {/* HeadLinks adds critical resource hints (preconnect, preload) for Core Web Vitals optimization */}
+        {/* HeadLinks adds additional resource hints (preload, favicon) for Core Web Vitals optimization */}
         <HeadLinks />
         <GoogleAnalytics />
         <PaddleProvider>

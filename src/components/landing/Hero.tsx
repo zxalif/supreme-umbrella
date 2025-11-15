@@ -22,18 +22,25 @@ export function Hero() {
     setIsMounted(true);
     
     // Trigger animations smoothly after mount
-    // Use requestAnimationFrame to ensure DOM is ready
+    // Use requestAnimationFrame to batch DOM operations and avoid forced reflows
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // Mark animated elements to trigger animations
-        // This allows CSS to transition from visible to animated state smoothly
+        // Batch all DOM reads first, then all DOM writes to avoid forced reflows
         const animatedElements = document.querySelectorAll('.animate-fade-in-up');
+        const elements: HTMLElement[] = [];
+        
+        // Batch DOM reads
         animatedElements.forEach((el) => {
-          // Force reflow to ensure smooth transition
           if (el instanceof HTMLElement) {
-            void el.offsetHeight;
-            el.setAttribute('data-animated', 'true');
+            elements.push(el);
           }
+        });
+        
+        // Batch DOM writes in a single frame
+        requestAnimationFrame(() => {
+          elements.forEach((el) => {
+            el.setAttribute('data-animated', 'true');
+          });
         });
       });
     });
@@ -98,10 +105,10 @@ export function Hero() {
             </h1>
 
             {/* Subheadline - More Compelling with Animation */}
-            <p className={`text-xl md:text-2xl text-gray-600 mb-4 leading-relaxed ${isMounted ? 'animate-fade-in-up delay-400' : 'opacity-100'}`}>
+            <p className={`text-xl md:text-2xl text-gray-700 mb-4 leading-relaxed ${isMounted ? 'animate-fade-in-up delay-400' : 'opacity-100'}`}>
               Stop manually searching Reddit. Get <strong className="text-primary-600 animate-pulse-subtle">qualified leads delivered</strong> to your inbox while you sleep.
             </p>
-            <p className={`text-lg text-gray-700 mb-8 ${isMounted ? 'animate-fade-in-up delay-500' : 'opacity-100'}`}>
+            <p className={`text-lg text-gray-800 mb-8 ${isMounted ? 'animate-fade-in-up delay-500' : 'opacity-100'}`}>
               AI-powered lead generation from Reddit's freelance communities.
             </p>
 
@@ -125,14 +132,14 @@ export function Hero() {
             <div className={`flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 ${isMounted ? 'animate-fade-in-up delay-700' : 'opacity-100'}`}>
               <Link
                 href="/register"
-                className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center group shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 animate-fade-in-up delay-1300"
+                className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center group shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 animate-fade-in-up delay-1300 min-h-[48px]"
               >
                 🚀 Start Finding Leads
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="#demo"
-                className="bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-primary-300 text-lg px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 animate-fade-in-up delay-1400"
+                className="bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-200 hover:border-primary-300 text-lg px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 animate-fade-in-up delay-1400 min-h-[48px]"
               >
                 👀 Watch Demo
               </Link>
@@ -142,21 +149,21 @@ export function Hero() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center lg:text-left">
               <div className="flex flex-col items-center lg:items-start">
                 <div className="text-2xl font-bold text-primary-600">15+</div>
-                <div className="text-sm text-gray-600">Hours saved weekly</div>
+                <div className="text-sm text-gray-700">Hours saved weekly</div>
               </div>
               <div className="flex flex-col items-center lg:items-start">
                 <div className="text-2xl font-bold text-secondary-600">24/7</div>
-                <div className="text-sm text-gray-600">AI monitoring</div>
+                <div className="text-sm text-gray-700">AI monitoring</div>
               </div>
               <div className="flex flex-col items-center lg:items-start">
                 <div className="text-2xl font-bold text-accent-600">3x</div>
-                <div className="text-sm text-gray-600">More opportunities</div>
+                <div className="text-sm text-gray-700">More opportunities</div>
               </div>
             </div>
 
             {/* Social Proof with Colorful Logos */}
             <div className={`mt-12 pt-8 border-t border-gray-200 ${isMounted ? 'animate-fade-in-up delay-800' : 'opacity-100'}`}>
-              <p className="text-sm text-gray-500 mb-4">Trusted by freelancers from:</p>
+              <p className="text-sm text-gray-700 mb-4">Trusted by freelancers from:</p>
               <div className="flex flex-wrap gap-6 items-center justify-center lg:justify-start">
                 <span className="text-[#14A800] font-bold text-lg hover:scale-110 transition-transform duration-300 cursor-default">Upwork</span>
                 <span className="text-[#1DBF73] font-bold text-lg hover:scale-110 transition-transform duration-300 cursor-default">Fiverr</span>

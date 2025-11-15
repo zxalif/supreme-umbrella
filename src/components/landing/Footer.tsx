@@ -25,7 +25,7 @@ export function Footer() {
               </div>
               <span className="text-xl font-bold text-white">ClientHunt</span>
             </div>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-300 mb-4">
               Find your next freelance opportunity on Reddit with AI-powered automation.
             </p>
             {/* Social Links */}
@@ -34,7 +34,7 @@ export function Footer() {
                 href="https://twitter.com/clienthuntapp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-300 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Twitter"
               >
                 <Twitter className="w-5 h-5" />
@@ -43,14 +43,14 @@ export function Footer() {
                 href="https://www.linkedin.com/company/clienthuntapp/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-300 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-white transition-colors cursor-not-allowed"
+                className="text-gray-300 hover:text-white transition-colors cursor-not-allowed min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="GitHub"
                 onClick={(e) => e.preventDefault()}
               >
@@ -58,7 +58,7 @@ export function Footer() {
               </a>
               <a
                 href="mailto:support@clienthunt.app"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-300 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Email"
               >
                 <Mail className="w-5 h-5" />
@@ -71,27 +71,27 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#features" className="text-sm hover:text-white transition-colors">
+                <Link href="#features" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Features
                 </Link>
               </li>
               <li>
-                <Link href="#pricing" className="text-sm hover:text-white transition-colors">
+                <Link href="#pricing" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="text-sm hover:text-white transition-colors">
+                <Link href="#faq" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/changelog" className="text-sm hover:text-white transition-colors">
+                <Link href="/changelog" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Changelog
                 </Link>
               </li>
               <li>
-                <Link href="/docs" className="text-sm hover:text-white transition-colors">
+                <Link href="/docs" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Documentation
                 </Link>
               </li>
@@ -103,22 +103,22 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/about" className="text-sm hover:text-white transition-colors">
+                <Link href="/about" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="text-sm hover:text-white transition-colors">
+                <Link href="/blog" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm hover:text-white transition-colors">
+                <Link href="/contact" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className="text-sm hover:text-white transition-colors">
+                <Link href="/careers" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Careers
                 </Link>
               </li>
@@ -130,27 +130,27 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/privacy" className="text-sm hover:text-white transition-colors">
+                <Link href="/privacy" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm hover:text-white transition-colors">
+                <Link href="/terms" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-sm hover:text-white transition-colors">
+                <Link href="/cookies" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="text-sm hover:text-white transition-colors">
+                <Link href="/security" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Security
                 </Link>
               </li>
               <li>
-                <Link href="/privacy#do-not-sell" className="text-sm hover:text-white transition-colors">
+                <Link href="/privacy#do-not-sell" className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center">
                   Do Not Sell My Data
                 </Link>
               </li>
@@ -162,14 +162,14 @@ export function Footer() {
         <div className="pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col space-y-2">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 © {currentYear} ClientHunt. All rights reserved.
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 Reddit is a trademark of Reddit Inc. ClientHunt is not affiliated with, endorsed by, or sponsored by Reddit Inc.
               </p>
             </div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Made with ❤️ for freelancers worldwide
             </p>
           </div>

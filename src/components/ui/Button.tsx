@@ -36,10 +36,10 @@ const buttonVariants = cva(
         danger: "bg-error-500 text-white hover:bg-error-600 active:bg-error-700 shadow-button hover:shadow-card-hover",
       },
       size: {
-        sm: "h-8 px-3 text-sm",
-        md: "h-10 px-4 text-sm",
-        lg: "h-12 px-6 text-base",
-        xl: "h-14 px-8 text-lg",
+        sm: "min-h-[44px] px-4 py-2.5 text-sm", // Minimum 44x44px touch target (WCAG 2.5.5)
+        md: "min-h-[48px] px-5 py-3 text-sm", // Recommended 48x48px touch target
+        lg: "min-h-[48px] px-6 py-3.5 text-base", // Recommended 48x48px touch target
+        xl: "min-h-[52px] px-8 py-4 text-lg", // Larger touch target for primary CTAs
       },
     },
     defaultVariants: {

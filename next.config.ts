@@ -15,8 +15,26 @@ const nextConfig: NextConfig = {
   // Custom server port is set via CLI: next dev -p 9100
   // See package.json scripts
   
+  // Modern JavaScript output - target modern browsers to avoid unnecessary polyfills
+  // This reduces bundle size by excluding polyfills for Baseline features
+  // (Array.at, Array.flat, Object.fromEntries, String.trimStart/trimEnd, etc.)
+  // Note: swcMinify is enabled by default in Next.js 15, no need to specify it
+  compiler: {
+    // Remove console.log in production
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  
+  // Transpile only what's necessary for modern browsers
+  transpilePackages: [],
+  
   // SEO & Performance Optimizations
   compress: true,
+  
+  // Optimize CSS loading - Next.js automatically optimizes CSS, but we can ensure proper configuration
+  // CSS is automatically code-split and loaded on-demand by Next.js
+  // Critical CSS is inlined automatically for better FCP/LCP
   
   // Optimize images
   images: {
@@ -35,11 +53,11 @@ const nextConfig: NextConfig = {
     // In production, we can be stricter
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.paddle.com", // unsafe-eval needed for Next.js HMR in dev, cdn.paddle.com for Paddle.js
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.paddle.com https://public.profitwell.com", // unsafe-eval needed for Next.js HMR in dev, cdn.paddle.com for Paddle.js, public.profitwell.com for Paddle's ProfitWell integration
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.paddle.com", // unsafe-inline needed for styled-jsx, cdn.jsdelivr.net for intro.js CSS, cdn.paddle.com for Paddle CSS
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app https://sandbox-api.paddle.com https://api.paddle.com https://sandbox-checkout.paddle.com https://checkout.paddle.com https://cdn.paddle.com", // Paddle API and checkout URLs, cdn.paddle.com for source maps
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com http://localhost:7300 https://api.clienthunt.app https://sandbox-api.paddle.com https://api.paddle.com https://sandbox-checkout.paddle.com https://checkout.paddle.com https://cdn.paddle.com https://public.profitwell.com", // Paddle API and checkout URLs, cdn.paddle.com for source maps, public.profitwell.com for ProfitWell API calls
       "frame-src 'self' https://sandbox-checkout.paddle.com https://checkout.paddle.com https://sandbox-buy.paddle.com https://buy.paddle.com", // Paddle checkout and buy iframes
       "object-src 'none'",
       "base-uri 'self'",

@@ -76,11 +76,7 @@ export function CookieConsent() {
                 <p className="text-xs md:text-sm text-gray-700 mb-2">
                   We use cookies to enhance your experience, analyze site usage, and assist in our marketing efforts.{' '}
                   <Link href="/cookies" className="text-primary-600 hover:underline font-medium">
-                    Learn more
-                  </Link>
-                  {' '}in our{' '}
-                  <Link href="/cookies" className="text-primary-600 hover:underline font-medium">
-                    Cookie Policy
+                    Learn more in our Cookie Policy
                   </Link>
                   .
                 </p>

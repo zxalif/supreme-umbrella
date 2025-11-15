@@ -1,0 +1,14 @@
+# Modern browsers only - no polyfills needed for Baseline features
+# These browsers support ES2022+ features natively (Array.at, Array.flat, Object.fromEntries, etc.)
+# Targeting browsers that support ES2022+ to avoid unnecessary polyfills
+last 2 Chrome versions
+last 2 ChromeAndroid versions
+last 2 Firefox versions
+last 2 FirefoxAndroid versions
+last 2 Safari versions
+last 2 iOS versions
+last 2 Edge versions
+not dead
+not op_mini all
+not IE 11
+

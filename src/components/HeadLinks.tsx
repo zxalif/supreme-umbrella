@@ -53,15 +53,14 @@ export function HeadLinks() {
       }
     };
 
-    // ===== CRITICAL: Preconnect to third-party domains (reduces connection time) =====
-    // These should be added as early as possible to establish connections
-    addLink('preconnect', 'https://fonts.googleapis.com');
-    addLink('preconnect', 'https://fonts.gstatic.com', { crossOrigin: 'anonymous' });
-    addLink('preconnect', 'https://api.clienthunt.app');
+    // Note: Preconnect hints are added via inline script in layout.tsx that runs immediately
+    // This ensures connections are established early, saving ~90ms on LCP for Paddle CDN
     
     // DNS prefetch for additional domains (less critical than preconnect)
+    // These are added client-side as they're not critical for initial page load
     addLink('dns-prefetch', 'https://www.google-analytics.com');
     addLink('dns-prefetch', 'https://www.googletagmanager.com');
+    addLink('dns-prefetch', 'https://public.profitwell.com');
     
     // ===== CRITICAL: Preload fonts for faster FCP and LCP =====
     // Next.js font optimization handles this, but explicit preload ensures consistency
@@ -69,16 +68,18 @@ export function HeadLinks() {
     // Note: Next.js already optimizes Inter font loading, so this is optional
     
     // ===== CRITICAL: Preload favicon and icons (improves FCP) =====
-    addLink('preload', '/favicon.ico', { 
+    // Using absolute URLs for better search engine compatibility (Yandex requires absolute URLs)
+    addLink('preload', `${baseUrl}/favicon.ico`, { 
       as: 'image', 
       type: 'image/x-icon',
       fetchPriority: 'high'
     });
     
     // Favicon links (for better browser/search engine support)
-    addLink('icon', '/favicon.ico', { type: 'image/x-icon' });
-    addLink('shortcut icon', '/favicon.ico', { type: 'image/x-icon' });
-    addLink('apple-touch-icon', '/apple-touch-icon.png', { 
+    // Yandex requires absolute URLs for favicon links
+    addLink('icon', `${baseUrl}/favicon.ico`, { type: 'image/x-icon' });
+    addLink('shortcut icon', `${baseUrl}/favicon.ico`, { type: 'image/x-icon' });
+    addLink('apple-touch-icon', `${baseUrl}/apple-touch-icon.png`, { 
       type: 'image/png', 
       sizes: '180x180' 
     });

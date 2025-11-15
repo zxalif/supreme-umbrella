@@ -47,7 +47,7 @@ export function HowItWorks() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             How It Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
             Get started in minutes and start finding opportunities today
           </p>
         </div>
@@ -97,7 +97,7 @@ export function HowItWorks() {
                   </h3>
 
                   {/* Description */}
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -108,12 +108,12 @@ export function HowItWorks() {
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-4 text-lg">
+          <p className="text-gray-700 mb-4 text-lg">
             Simple, automated, and effective
           </p>
           <a
             href="/register"
-            className="btn-primary text-lg px-8 py-4 inline-block"
+            className="btn-primary text-lg px-8 py-4 inline-block min-h-[48px] flex items-center justify-center"
           >
             Get Started Now
           </a>

@@ -73,7 +73,7 @@ export function Features() {
             Stop Missing Great 
             <span className="text-primary-500"> Opportunities</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
             AI-powered lead generation that works 24/7 so you can focus on what you do best
           </p>
         </div>
@@ -143,7 +143,7 @@ export function Features() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-700 text-sm">
                   {feature.description}
                 </p>
               </div>
